@@ -240,18 +240,21 @@
             const measurements = {};
             
             inputs.forEach(input => {
+                // Captura os valores dos inputs para o payload
                 measurements[input.dataset.field] = input.value;
             });
 
-            // Feedback Visual
+            // Feedback Visual de carregamento
             const originalContent = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> PROCESSANDO...';
 
+            // CORREÇÃO DE UNÍSSONO: Payload ajustado com chaves 'component' e 'target' 
+            // para compatibilidade com o workflow do n8n
             const payload = {
                 os_id: selectedOS.os_id,
-                component_name: componentName,
-                target_sector: targetSector,
+                component: componentName,
+                target: targetSector,
                 measurements: measurements,
                 technician: "Administrador"
             };
@@ -264,18 +267,18 @@
                 });
 
                 if (response.ok) {
-                    // Efeito de conclusão
+                    // Aplica efeito visual de "concluído" no card
                     card.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
                     btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> ENVIADO PARA ${targetSector}`;
                     
-                    // Notificação flutuante simples
                     alert(`Componente ${componentName} enviado com sucesso para ${targetSector}!`);
                 } else {
-                    throw new Error("Erro na API");
+                    const errorText = await response.text();
+                    throw new Error(`Erro na API: ${errorText}`);
                 }
             } catch (error) {
-                console.error(error);
-                alert("Falha ao processar ação. Verifique a conexão.");
+                console.error("Erro ao enviar medição:", error);
+                alert("Falha ao processar ação. Verifique a conexão ou os logs do servidor.");
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
             }
