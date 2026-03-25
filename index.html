@@ -3,321 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setor Metrologia | TurboSul - Controle de Produção</title>
+    <title>Setor Metrologia | TurboSul</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .bg-turbo-teal { background-color: #0D9488; }
-        .text-turbo-teal { color: #0D9488; }
-        .border-turbo-teal { border-color: #0D9488; }
         .bg-turbo-blue { background-color: #2563EB; }
-        .bg-turbo-orange { background-color: #EA580C; }
-        .checklist-scroll::-webkit-scrollbar { width: 5px; }
-        .checklist-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .checklist-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .os-card-selected { border-left: 4px solid #2563EB; background-color: #f8fafc; }
-        .measure-input { background-color: #334155; color: white; font-family: monospace; }
+        .text-turbo-blue { color: #2563EB; }
+        .border-turbo-blue { border-color: #2563EB; }
+        .bg-turbo-teal { background-color: #0D9488; }
+        .os-selected { border-left: 4px solid #2563EB !important; background-color: #f0f9ff !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #2563EB; border-radius: 10px; }
+        .input-measure { background-color: #f8fafc; border: 1px solid #e2e8f0; font-family: monospace; transition: all 0.2s; }
+        .input-measure:focus { border-color: #2563EB; outline: none; background-color: #fff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
+<body class="bg-slate-100 text-slate-800 min-h-screen overflow-hidden">
+
+    <!-- MODAL SUCESSO -->
+    <div id="modalSuccess" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-check text-3xl"></i>
+            </div>
+            <h4 class="text-xl font-black text-slate-800 mb-2">Medição Salva!</h4>
+            <p id="successMsg" class="text-slate-500 text-sm mb-6 font-medium italic">Dados enviados com sucesso para o próximo setor.</p>
+            <button onclick="closeModal('modalSuccess')" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl uppercase text-xs tracking-widest transition hover:bg-black">Continuar</button>
+        </div>
+    </div>
 
     <!-- HEADER -->
-    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div class="flex items-center space-x-4">
             <img src="https://i.postimg.cc/Jh5Jvrc9/IMG-7901.png" alt="TurboSul Logo" class="h-10">
             <div>
                 <h1 class="text-lg font-bold tracking-tight text-slate-900 uppercase">TurboSul - Controle de Produção</h1>
-                <p class="text-xs text-slate-500 font-medium italic">Setor de Metrologia e Qualidade</p>
+                <p class="text-xs text-slate-500 font-medium italic">Metrologia e Inspeção Técnica</p>
             </div>
         </div>
         <div class="flex items-center space-x-6">
-            <div class="text-right border-l pl-6 border-slate-200">
-                <p class="text-sm font-bold leading-none">Administrador</p>
-                <p class="text-[10px] text-turbo-teal font-bold uppercase tracking-wider">Metrologia</p>
+            <div class="text-right border-r pr-6 border-slate-200">
+                <p class="text-sm font-bold leading-none">Técnico Metrologista</p>
+                <p class="text-[10px] text-turbo-blue font-black uppercase tracking-wider">Qualidade</p>
             </div>
-            <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Sair</button>
+            <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-bold transition">Sair</button>
         </div>
     </header>
 
-    <div class="flex h-[calc(100vh-64px)] overflow-hidden">
+    <div class="flex h-[calc(100vh-64px)]">
         <!-- SIDEBAR -->
         <aside class="w-80 bg-white border-r border-slate-200 overflow-y-auto flex-shrink-0">
-            <div class="p-4 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
-                <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">Fila de Medição</h2>
+            <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center sticky top-0 z-20">
+                <h2 class="text-xs font-black uppercase tracking-widest text-slate-500 italic">Aguardando Medição</h2>
+                <button onclick="loadMetrologyQueue()" class="text-turbo-blue hover:rotate-180 transition-all duration-500">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
             </div>
-            <div id="os-queue-container" class="divide-y divide-slate-100">
-                <div class="p-8 text-center text-slate-400 animate-pulse italic">Carregando fila...</div>
+            <div id="os-list" class="divide-y divide-slate-100">
+                <div class="p-8 text-center text-slate-400 text-xs italic animate-pulse">Carregando fila...</div>
             </div>
         </aside>
 
-        <!-- WORKSPACE -->
-        <main class="flex-1 overflow-y-auto p-6 bg-slate-50">
-            <div id="workspace-header" class="hidden flex flex-col lg:flex-row justify-between gap-4 mb-6">
-                <div class="bg-turbo-blue text-white rounded-3xl p-6 shadow-lg flex-1 relative overflow-hidden">
-                    <div class="relative z-10">
-                        <h2 id="current-os-id" class="text-3xl font-black italic">OS-XXXX</h2>
-                        <p id="current-os-desc" class="text-sm font-medium opacity-90 uppercase tracking-widest italic">CLIENTE | MODELO</p>
-                    </div>
-                    <div class="mt-4 flex space-x-3 relative z-10">
-                        <button onclick="openSpecialServiceModal()" class="bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition">+ Adicionar Serviço Especial</button>
-                    </div>
-                </div>
+        <!-- MAIN -->
+        <main class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
+            
+            <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-slate-400">
+                <i class="fa-solid fa-microscope text-6xl mb-4 opacity-10"></i>
+                <p class="uppercase tracking-widest font-bold text-sm">Selecione uma OS para Iniciar Metrologia</p>
+            </div>
 
-                <div class="bg-slate-900 text-white rounded-3xl p-5 flex flex-col justify-between border-b-4 border-turbo-teal lg:w-72 shadow-xl">
-                    <div class="flex items-center space-x-3">
-                        <div class="p-2 bg-turbo-teal rounded-lg"><i class="fa-solid fa-microscope"></i></div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Qualidade</p>
-                            <p class="text-xs font-black text-white uppercase">Aferição Ativa</p>
+            <div id="main-workspace" class="hidden space-y-6">
+                <!-- TOP INFO -->
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="flex-1 bg-turbo-blue rounded-2xl shadow-lg text-white p-6 min-h-[120px] flex flex-col justify-center relative overflow-hidden">
+                        <div class="relative z-10 ml-4 flex justify-between items-center w-full pr-8">
+                            <div>
+                                <h2 id="display-os" class="text-3xl font-black mb-1 italic tracking-tighter uppercase">OS-XXXX</h2>
+                                <p id="display-desc" class="text-sm font-medium opacity-90 uppercase tracking-widest italic">CLIENTE | MODELO</p>
+                            </div>
+                            <button type="button" onclick="openSpecialModal()" class="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                + Adicionar Medição Especial
+                            </button>
                         </div>
+                        <i class="fa-solid fa-ruler-combined absolute right-[-20px] bottom-[-20px] text-white opacity-10 text-9xl"></i>
                     </div>
                 </div>
-            </div>
 
-            <!-- VISTORIA ANEXOS (PARIDADE COM ANÁLISE TÉCNICA) -->
-            <div id="vistoria-container" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-                    <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-widest">1. Anexos (Conferência de Itens Externos)</h3>
+                <!-- CHECKLIST ANEXOS (CONFERÊNCIA FINAL) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <h3 class="text-[10px] font-black uppercase text-turbo-blue tracking-widest">1. Anexos (Itens Externos do Cliente)</h3>
+                        <span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold uppercase">Conferência de Integridade</span>
+                    </div>
+                    <div id="anexos-container" class="p-6 space-y-1">
+                        <!-- Renderizado via JS -->
+                    </div>
                 </div>
-                <div id="tab-anexos" class="p-6 space-y-1">
-                    <!-- Itens Anexos renderizados aqui -->
+
+                <!-- CARDS DE METROLOGIA -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32" id="metrology-grid">
+                    <!-- Cards Dinâmicos (EIXO, CCE, REPAROS) -->
                 </div>
             </div>
-
-            <div id="empty-state" class="flex flex-col items-center justify-center h-full text-slate-400">
-                <i class="fa-solid fa-compass-drafting text-5xl mb-4"></i>
-                <p class="text-lg font-bold">Selecione uma Ordem para iniciar a medição técnica.</p>
-            </div>
-
-            <div id="components-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-24"></div>
         </main>
     </div>
 
-    <!-- MODAIS E SCRIPTS -->
-    <div id="modal-special" class="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border-t-8 border-turbo-blue">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 class="font-black text-slate-800 uppercase italic tracking-tight text-lg">Adicionar Serviço Especial</h3>
-                <button onclick="closeModal('modal-special')" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <!-- MODAL SERVIÇO ESPECIAL -->
+    <div id="modalSpecial" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border-t-8 border-turbo-blue">
+            <div class="px-8 py-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-slate-800 uppercase text-lg tracking-tighter">Nova Medição Técnica</h3>
+                <button onclick="closeModal('modalSpecial')" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
             </div>
             <div class="p-8 space-y-6">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Item / Medição Extra</label>
-                    <input type="text" id="special-item-name" oninput="validateSpecialModal()" placeholder="EX: MEDIÇÃO DE CARCAÇA EXTRA..." class="w-full bg-slate-100 border-2 border-transparent focus:border-turbo-blue rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Nome da Peça ou Componente</label>
+                    <input type="text" id="special-item-name" oninput="validateSpecialModal()" placeholder="EX: CARCAÇA INTERMEDIÁRIA, FLANGE EXTRA..." class="w-full bg-slate-100 border-2 border-transparent focus:border-turbo-blue rounded-2xl px-5 py-4 text-sm font-bold outline-none transition-all">
                 </div>
                 <div class="flex space-x-3 pt-6 border-t">
-                    <button onclick="closeModal('modal-special')" class="flex-1 bg-slate-100 text-slate-400 font-black py-4 rounded-2xl uppercase text-xs">Cancelar</button>
-                    <button id="btn-add-special" disabled onclick="addSpecialCard()" class="flex-[2] bg-turbo-blue/40 text-white font-black py-4 rounded-2xl uppercase text-xs cursor-not-allowed shadow-lg transition-all">Adicionar Item</button>
+                    <button onclick="closeModal('modalSpecial')" class="flex-1 bg-slate-100 text-slate-400 font-black py-4 rounded-2xl uppercase text-xs tracking-widest hover:bg-slate-200">Cancelar</button>
+                    <button id="btn-add-special" disabled onclick="addSpecialCard()" class="flex-[2] bg-turbo-blue/40 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest cursor-not-allowed shadow-lg transition-all">Adicionar Card</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="modal-confirm-routing" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center border-t-8 border-turbo-teal">
-            <div class="w-20 h-20 bg-teal-50 text-turbo-teal rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-paper-plane text-3xl"></i></div>
-            <h4 class="text-xl font-black text-slate-800 mb-2 uppercase italic">Finalizar Medição?</h4>
-            <p id="routing-confirm-msg" class="text-slate-500 text-sm mb-6 font-medium"></p>
-            <div class="flex gap-3">
-                <button onclick="closeModal('modal-confirm-routing')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl uppercase text-xs">Cancelar</button>
-                <button id="btn-confirm-routing-final" class="flex-1 bg-turbo-teal text-white font-bold py-3 rounded-xl shadow-lg uppercase text-xs">Sim, Enviar</button>
-            </div>
-        </div>
-    </div>
+<script>
+    const API_QUEUE = 'https://webhook.mareflow.com.br/webhook/production/metrology-queue';
+    const API_ACTION = 'https://webhook.mareflow.com.br/webhook/production/metrology-action';
+    
+    let currentOS = null;
+    let queueData = [];
+    let specialItems = [];
 
-    <script>
-        const API_QUEUE = 'https://webhook.mareflow.com.br/webhook/production/metrology-queue';
-        const API_ACTION = 'https://webhook.mareflow.com.br/webhook/production/metrology-action';
+    const ANEXOS_LIST = ['Travas CCO', 'Travas CT', 'Parafuso CT Flangeado', 'Parafuso CCO Flangeado', 'Cano Retorno Parafusos', 'Adaptador Lubrificação', 'Nipel de Lubrificação', 'Cano Lubrificação com Nipel', 'Atuador Pressão', 'Atuador Vácuo', 'Atuador Vácuo Eletrônico', 'Atuador Eletrônico com Haste', 'Suporte Atuador Eletrônico', 'Calço Atuador', 'Chapa de Proteção Atuador', 'Parafusos Suporte Atuador', 'Parafusos Chapa Proteção', 'Mangueira na CCO', 'Prisioneiro Saída', 'Prisioneiro Pé Mesa CT', 'Prisioneiro CCE', 'Parafuso CCE', 'Prisioneiro CCO', 'Prisioneiro Especial Longo', 'Saída de Escape', 'Flange Saída CT', 'Chapa de Proteção CT', 'Freio Motor', 'Chapa de Proteção Saída', 'Nipel Fixo na CCO', 'Nipel Roscado na CCO', 'Nipel com Parafuso OCO', 'Olhal', 'Parafuso OCO', 'Coletor', 'Cinta CT CCE', 'Cinta CCO', 'Cinta Saída', 'Flange Pé Mesa CT', 'Cano Admissão CCO', 'Cano Admissão Motor', 'Cano de Água', 'Valvula Prioritária', 'Valvula Solenóide', 'Sonda Temp Pressão', 'Sensor PVF', 'Bocal Plástico Biturbo', 'Tampão CT', 'Arruela Plástica Biturbo', 'Bocal Alumínio Biturbo', 'Luva Borracha Biturbo', 'Cano Ligação Alumínio', 'Capa Alumínio Biturbo', 'Peça Alumínio com Mola', 'Juntas', 'Almofada Amianto Saída', 'Mangueira Atuador', 'Conexão T', 'Defletor Admissão com Trava', 'Abraçadeiras', 'Capa Protetiva Alumínio', 'Nipel de Retorno', 'Mangueira de Retorno', 'Suporte CT', 'Anel Cano Retorno', 'Parafuso União Biturbo', 'Valvula Pressão Partida', 'Oring', 'Valvula Sensor Partida', 'Mangueira Bocal Alumínio'];
+
+    const METROLOGY_MAP = {
+        'CCE': ['VERIFICAÇÃO ROSCAS', 'FACES DE ASSENTAMENTO', 'MEDIDA COLO MANCAL', 'VERIFICAÇÃO ASPECTO COLO', 'LAVAÇÃO CCE - QUEROSENE', 'ÓLEO PROTETIVO'],
+        'EIXO': ['VERIFICAÇÃO PALHETAS', 'CANAL DO ANEL', 'DIAMETRO COLO', 'DIAMETRO MENOR', 'DIAMETRO MAIOR', 'ANÁLISE ROSCA', 'VIBRAÇÃO USINAGEM'],
+        'REPAROS': ['ANÁLISE VISUAL', 'DEFINIÇÃO FOLGAS', 'LIMPEZA DE PRATO', 'LIMPEZA DE COLAR', 'LIMPEZA DE FLANGE', 'CONFERÊNCIA ESTOQUE']
+    };
+
+    window.addEventListener('load', loadMetrologyQueue);
+
+    async function loadMetrologyQueue() {
+        const list = document.getElementById('os-list');
+        try {
+            const res = await fetch(API_QUEUE);
+            queueData = await res.json();
+            list.innerHTML = '';
+            if (queueData.length === 0) { list.innerHTML = '<div class="p-10 text-center text-slate-400 text-xs italic">Fila Vazia.</div>'; return; }
+            
+            queueData.forEach(os => {
+                const card = document.createElement('div');
+                card.className = 'p-5 cursor-pointer hover:bg-slate-50 transition border-l-4 border-transparent bg-white rounded-xl shadow-sm mb-3 mx-4 mt-4';
+                card.id = `card-${os.id}`;
+                card.onclick = () => selectOS(os);
+                card.innerHTML = `<div class="flex justify-between items-start mb-2"><span class="text-sm font-black text-slate-900">${os.business_id}</span><span class="px-2 py-0.5 text-[9px] font-black uppercase rounded-md bg-blue-100 text-blue-600">${os.urgency || 'Normal'}</span></div><p class="text-xs font-bold text-slate-700 uppercase mb-1">${os.model}</p><p class="text-[10px] font-medium text-slate-500 uppercase truncate">${os.client}</p>`;
+                list.appendChild(card);
+            });
+        } catch (e) { list.innerHTML = '<div class="p-4 text-red-500">Erro na fila.</div>'; }
+    }
+
+    function selectOS(os) {
+        currentOS = os;
+        specialItems = [];
+        document.querySelectorAll('#os-list > div').forEach(c => c.classList.remove('os-selected'));
+        document.getElementById(`card-${os.id}`)?.classList.add('os-selected');
+        document.getElementById('welcome-screen').classList.add('hidden');
+        document.getElementById('main-workspace').classList.remove('hidden');
+        document.getElementById('display-os').innerText = os.business_id;
+        document.getElementById('display-desc').innerText = `${os.client} | ${os.model}`;
         
-        let selectedOS = null;
-        let queueData = [];
-        let specialItemsList = [];
+        renderAnexos();
+        renderMetrologyCards();
+    }
 
-        const ANEXOS_ITEMS = ['Travas CCO', 'Travas CT', 'Parafuso CT Flangeado', 'Parafuso CCO Flangeado', 'Cano Retorno Parafusos', 'Adaptador Lubrificação', 'Nipel de Lubrificação', 'Cano Lubrificação com Nipel', 'Atuador Pressão', 'Atuador Vácuo', 'Atuador Vácuo Eletrônico', 'Atuador Eletrônico com Haste', 'Suporte Atuador Eletrônico', 'Calço Atuador', 'Chapa de Proteção Atuador', 'Parafusos Suporte Atuador', 'Parafusos Chapa Proteção', 'Mangueira na CCO', 'Prisioneiro Saída', 'Prisioneiro Pé Mesa CT', 'Prisioneiro CCE', 'Parafuso CCE', 'Prisioneiro CCO', 'Prisioneiro Especial Longo', 'Saída de Escape', 'Flange Saída CT', 'Chapa de Proteção CT', 'Freio Motor', 'Chapa de Proteção Saída', 'Nipel Fixo na CCO', 'Nipel Roscado na CCO', 'Nipel com Parafuso OCO', 'Olhal', 'Parafuso OCO', 'Coletor', 'Cinta CT CCE', 'Cinta CCO', 'Cinta Saída', 'Flange Pé Mesa CT', 'Cano Admissão CCO', 'Cano Admissão Motor', 'Cano de Água', 'Valvula Prioritária', 'Valvula Solenóide', 'Sonda Temp Pressão', 'Sensor PVF', 'Bocal Plástico Biturbo', 'Tampão CT', 'Arruela Plástica Biturbo', 'Bocal Alumínio Biturbo', 'Luva Borracha Biturbo', 'Cano Ligação Alumínio', 'Capa Alumínio Biturbo', 'Peça Alumínio com Mola', 'Juntas', 'Almofada Amianto Saída', 'Mangueira Atuador', 'Conexão T', 'Defletor Admissão com Trava', 'Abraçadeiras', 'Capa Protetiva Alumínio', 'Nipel de Retorno', 'Mangueira de Retorno', 'Suporte CT', 'Anel Cano Retorno', 'Parafuso União Biturbo', 'Valvula Pressão Partida', 'Oring', 'Valvula Sensor Partida', 'Mangueira Bocal Alumínio'];
+    function renderAnexos() {
+        const container = document.getElementById('anexos-container');
+        container.innerHTML = ANEXOS_LIST.map(item => `
+            <div class="grid grid-cols-12 gap-3 items-center bg-white p-2 border-b border-slate-50 hover:bg-slate-50 transition">
+                <div class="col-span-5 text-[10px] font-bold text-slate-600 uppercase tracking-tighter ml-2">${item}</div>
+                <div class="col-span-3">
+                    <select onchange="updateSelectColor(this)" class="w-full bg-slate-400 text-white text-[9px] font-black py-2 rounded-lg uppercase text-center outline-none">
+                        <option value="NÃO INFORMADO">NÃO INFORMADO</option>
+                        <option value="PEÇA OK">PEÇA OK</option>
+                        <option value="RECONDICIONAR">RECONDICIONAR</option>
+                        <option value="TROCAR">TROCAR</option>
+                    </select>
+                </div>
+                <div class="col-span-4"><input type="text" placeholder="Obs..." class="w-full bg-slate-100 text-slate-500 text-[10px] rounded-lg px-3 py-1.5 outline-none border border-transparent focus:ring-1 focus:ring-turbo-blue"></div>
+            </div>`).join('');
+    }
 
-        const METROLOGY_STRUCTURE = {
-            CCE: ["VERIFICAÇÃO ROSCAS", "FACES DE ASSENTAMENTO", "MEDIDA COLO MANCAL", "VERIFICAÇÃO ASPECTO COLO", "LAVAÇÃO CCE - QUEROSENE", "ÓLEO PROTETIVO"],
-            EIXO: ["VERIFICAÇÃO DAS PALHETAS", "VERIFICAÇÃO CANAL DO ANEL", "DISTÂNCIA ANEL / FACE COLAR", "DIAMETROS COLOS", "DIAMETRO MENOR DO EIXO", "DIAMETRO MAIOR DO EIXO", "DIAMETRO EXT. ALOJAMENTO DO ANEL", "DIAMETRO DO ALOJAMENTO DO ANEL", "ANÁLISE ROSCA", "ANÁLISE VIBRAÇÃO USINAGEM", "ANÁLISE PALHETAS AMASSADAS"],
-            REPAROS: ["ANÁLISE VISUAL", "TROCA DO COMPONENTE", "DEFINIÇÃO FOLGAS P/ USINAGEM", "ANÁLISE LIMPEZA", "CONFERÊNCIA DO ESTOQUE DE REPAROS", "PEDIDO DE COMPRAS", "LEVANTAMENTO ESTOQUE", "LIMPEZA DE PRATO / ESTOQUE", "LIMPEZA DE COLAR/ ESTOQUE", "LIMPEZA DE FLANGE / ESTOQUE", "LIMPEZA DE PROT. TÉRMICO / ESTOQUE", "LIMPEZA DE MANCAL ENCOSTO/ ESTOQUE", "LIMPEZA DE DEFLETOR DE ÓLEO / ESTOQUE", "LIMPEZA DE ESPAÇADOR / ESTOQUE", "ESTOQUE DE PORCAS", "ESTOQUE DE VITON", "ESTOQUE DE ANEL", "ESTOQUE TRAVA DE MANCAL"]
+    function renderMetrologyCards() {
+        const grid = document.getElementById('metrology-grid');
+        const defaultComponents = ['CCE', 'EIXO', 'REPAROS'];
+        const allComps = [...defaultComponents, ...specialItems];
+
+        grid.innerHTML = allComps.map(compName => {
+            const items = METROLOGY_MAP[compName] || ['MEDIÇÃO TÉCNICA GERAL'];
+            return `
+                <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 p-6 flex flex-col" id="comp-${compName}">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">${compName}</h4>
+                        <span class="text-[10px] font-black uppercase px-4 py-1.5 bg-turbo-blue text-white rounded-full tracking-widest">Metrologia</span>
+                    </div>
+                    <div class="space-y-4 flex-1">
+                        ${items.map(i => `
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${i}</p>
+                                <div class="flex gap-2">
+                                    <input type="text" placeholder="Medida" class="w-2/3 input-measure rounded-xl px-4 py-2 text-xs font-bold" data-item="${i}">
+                                    <input type="text" placeholder="Obs" class="w-1/3 input-measure rounded-xl px-4 py-2 text-xs" data-obs="${i}">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-8 pt-6 border-t grid grid-cols-2 gap-2">
+                         <button onclick="sendTo(this, '${compName}', 'RETIFICA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Retífica</button>
+                         <button onclick="sendTo(this, '${compName}', 'SOLDA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Solda</button>
+                         <button onclick="sendTo(this, '${compName}', 'BANCADA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Bancada</button>
+                         <button onclick="sendTo(this, '${compName}', 'MONTAGEM')" class="col-span-2 py-4 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl transition hover:bg-emerald-700 shadow-lg mt-2">Pronto p/ Montagem</button>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    async function sendTo(btn, component, target) {
+        const card = document.getElementById(`comp-${component}`);
+        btn.disabled = true;
+        btn.innerText = 'ENVIANDO...';
+
+        const data = {
+            os_id: currentOS.id,
+            component: component,
+            target: target,
+            measurements: Array.from(card.querySelectorAll('[data-item]')).map(inp => ({
+                item: inp.dataset.item,
+                value: inp.value,
+                obs: card.querySelector(`[data-obs="${inp.dataset.item}"]`).value
+            }))
         };
 
-        window.addEventListener('load', fetchQueue);
-
-        async function fetchQueue() {
-            try {
-                const response = await fetch(API_QUEUE);
-                const result = await response.json();
-                queueData = Array.isArray(result) ? result : (result.data || (result.business_id ? [result] : []));
-                renderQueue();
-            } catch (error) {
-                document.getElementById('os-queue-container').innerHTML = '<p class="p-4 text-red-500 text-xs">Erro de conexão.</p>';
+        try {
+            const res = await fetch(API_ACTION, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            if(res.ok) {
+                card.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
+                btn.innerHTML = 'CONCLUÍDO';
             }
-        }
+        } catch (e) { btn.disabled = false; btn.innerText = 'ERRO'; }
+    }
 
-        function renderQueue() {
-            const container = document.getElementById('os-queue-container');
-            container.innerHTML = queueData.map(os => `
-                <div onclick="selectOS('${os.id}')" class="p-4 cursor-pointer hover:bg-slate-50 transition border-l-4 ${selectedOS?.id === os.id ? 'os-card-selected border-blue-600' : 'border-transparent'}">
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-sm font-black text-slate-900">${os.business_id}</span>
-                        <span class="px-2 py-0.5 text-[9px] font-bold rounded uppercase bg-blue-100 text-blue-600">${os.urgency || 'Normal'}</span>
-                    </div>
-                    <p class="text-[10px] font-bold text-turbo-blue uppercase truncate">${os.client}</p>
-                    <p class="text-xs text-slate-500 font-medium">${os.model}</p>
-                </div>
-            `).join('');
-        }
+    function openSpecialModal() { document.getElementById('special-item-name').value = ''; validateSpecialModal(); document.getElementById('modalSpecial').classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    
+    function validateSpecialModal() {
+        const val = document.getElementById('special-item-name').value;
+        const btn = document.getElementById('btn-add-special');
+        btn.disabled = val.length < 3;
+        btn.className = btn.disabled ? 'flex-[2] bg-turbo-blue/40 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest cursor-not-allowed' : 'flex-[2] bg-turbo-blue text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg cursor-pointer';
+    }
 
-        function selectOS(id) {
-            selectedOS = queueData.find(o => o.id === id);
-            specialItemsList = [];
-            renderQueue();
-            document.getElementById('empty-state').classList.add('hidden');
-            document.getElementById('workspace-header').classList.remove('hidden');
-            document.getElementById('vistoria-container').classList.remove('hidden');
-            document.getElementById('components-grid').classList.remove('hidden');
-            document.getElementById('current-os-id').innerText = selectedOS.business_id;
-            document.getElementById('current-os-desc').innerText = `${selectedOS.model} | ${selectedOS.client}`;
-            renderAnexos();
-            renderComponentCards();
-        }
+    function addSpecialCard() {
+        const name = document.getElementById('special-item-name').value.toUpperCase();
+        specialItems.push(name);
+        closeModal('modalSpecial');
+        renderMetrologyCards();
+    }
 
-        function renderAnexos() {
-            const container = document.getElementById('tab-anexos');
-            container.innerHTML = ANEXOS_ITEMS.map(item => `
-                <div class="grid grid-cols-12 gap-3 items-center bg-white p-2 border-b border-slate-50 hover:bg-slate-50 transition">
-                    <div class="col-span-5 text-[10px] font-bold text-slate-600 uppercase tracking-tighter ml-2">${item}</div>
-                    <div class="col-span-3">
-                        <select onchange="updateSelectColor(this)" class="w-full bg-slate-400 text-white text-[9px] font-black py-2 rounded-lg uppercase text-center outline-none">
-                            <option value="NÃO INFORMADO">NÃO INFORMADO</option>
-                            <option value="PEÇA OK">PEÇA OK</option>
-                            <option value="RECONDICIONAR">RECONDICIONAR</option>
-                            <option value="TROCAR">TROCAR</option>
-                        </select>
-                    </div>
-                    <div class="col-span-4"><input type="text" placeholder="Obs..." class="w-full bg-slate-100 text-slate-500 text-[10px] rounded-lg px-3 py-1.5 outline-none border border-transparent"></div>
-                </div>`).join('');
-        }
-
-        function renderComponentCards() {
-            const grid = document.getElementById('components-grid');
-            if (!grid || !selectedOS) return;
-
-            const componentsFromDB = selectedOS.components_to_render || [];
-            const allToRender = [
-                ...componentsFromDB.map(name => ({ title: name, isSpecial: false })),
-                ...specialItemsList
-            ];
-
-            if (allToRender.length === 0) {
-                grid.innerHTML = '<div class="col-span-full p-20 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente.</div>';
-                return;
-            }
-
-            grid.innerHTML = allToRender.map(comp => {
-                const trk = (selectedOS.tracking || []).find(t => (t.component_name === comp.title || t.component === comp.title));
-                const isSent = !!trk && trk.current_stage !== 'METROLOGIA';
-                const cardStyle = isSent ? 'opacity-40 grayscale pointer-events-none' : '';
-                const items = METROLOGY_STRUCTURE[comp.title] || ["CONFERÊNCIA GERAL"];
-
-                return `
-                    <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 flex flex-col p-6 ${cardStyle}" id="comp-card-${comp.title.replace(/\s+/g, '-')}">
-                        <div class="flex justify-between items-center mb-6">
-                            <h4 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">${comp.title}</h4>
-                            <span class="text-[10px] font-black uppercase px-4 py-1.5 ${isSent ? 'bg-slate-500' : 'bg-turbo-teal'} text-white rounded-full">${isSent ? 'EM SETOR' : 'Metrologia'}</span>
-                        </div>
-                        <div class="flex-1 flex flex-col">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 italic">Medição Técnica:</p>
-                            <div class="checklist-scroll overflow-y-auto max-h-[220px] space-y-2 mb-8 pr-1">
-                                ${items.map(i => `
-                                    <div class="flex flex-col space-y-1 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-turbo-teal" data-item="${i}">
-                                            <span class="text-[9px] font-bold text-slate-600 uppercase tracking-tighter">${i}</span>
-                                        </div>
-                                        <input type="text" placeholder="Digite a medida..." class="measure-input w-full px-3 py-1.5 rounded-lg text-[10px] font-bold outline-none focus:ring-1 focus:ring-turbo-teal" data-measure-for="${i}">
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <hr class="border-slate-100 mb-6">
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="sendPieceTo(this, '${comp.title}', 'RETIFICA')" class="py-3 bg-slate-50 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100">Retífica</button>
-                                <button onclick="sendPieceTo(this, '${comp.title}', 'SOLDA')" class="py-3 bg-slate-50 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100">Solda</button>
-                                <button onclick="sendPieceTo(this, '${comp.title}', 'BANCADA')" class="py-3 bg-slate-50 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100">Bancada</button>
-                                <button onclick="sendPieceTo(this, '${comp.title}', 'MONTAGEM')" class="col-span-2 py-4 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg mt-2">Pronto p/ Montagem</button>
-                            </div>
-                        </div>
-                    </div>`;
-            }).join('');
-        }
-
-        async function sendPieceTo(btn, componentName, targetSector) {
-            const modal = document.getElementById('modal-confirm-routing');
-            const msg = document.getElementById('routing-confirm-msg');
-            const confirmBtn = document.getElementById('btn-confirm-routing-final');
-            modal.classList.remove('hidden');
-            msg.innerText = `Finalizar medição de ${componentName} e enviar para ${targetSector}?`;
-            
-            confirmBtn.onclick = async () => {
-                modal.classList.add('hidden');
-                const card = document.getElementById(`comp-card-${componentName.replace(/\s+/g, '-')}`);
-                
-                // Captura medidas digitadas
-                const measurements = {};
-                card.querySelectorAll('input[data-measure-for]').forEach(inp => {
-                    const itemName = inp.dataset.measureFor;
-                    measurements[itemName] = inp.value;
-                });
-
-                btn.disabled = true;
-                btn.innerText = 'ENVIANDO...';
-                try {
-                    const response = await fetch(API_ACTION, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            os_id: selectedOS.os_id || selectedOS.id, 
-                            component: componentName, 
-                            target: targetSector, 
-                            measurements: measurements 
-                        })
-                    });
-                    if (response.ok) {
-                        card.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
-                        btn.innerHTML = `CONCLUÍDO`;
-                        btn.className = "col-span-2 py-4 bg-slate-800 text-white text-[11px] font-black uppercase rounded-xl mt-2";
-                    }
-                } catch (e) { alert("Falha ao enviar."); btn.disabled = false; }
-            };
-        }
-
-        function updateSelectColor(el) {
-            const val = el.value;
-            el.classList.remove('bg-slate-400', 'bg-emerald-500', 'bg-yellow-500', 'bg-red-600', 'text-white');
-            if (val === 'NÃO INFORMADO') el.classList.add('bg-slate-400', 'text-white');
-            else if (val === 'PEÇA OK') el.classList.add('bg-emerald-500', 'text-white');
-            else if (val === 'RECONDICIONAR') el.classList.add('bg-yellow-500', 'text-white');
-            else if (val === 'TROCAR') el.classList.add('bg-red-600', 'text-white');
-        }
-
-        function validateSpecialModal() {
-            const name = document.getElementById('special-item-name').value;
-            const btn = document.getElementById('btn-add-special');
-            btn.disabled = name.length < 3;
-            btn.className = btn.disabled ? 'flex-[2] bg-turbo-blue/40 text-white font-black py-4 rounded-2xl uppercase text-[10px] cursor-not-allowed' : 'flex-[2] bg-turbo-blue text-white font-black py-4 rounded-2xl uppercase text-[10px] shadow-lg cursor-pointer';
-        }
-
-        function addSpecialCard() {
-            const name = document.getElementById('special-item-name').value.toUpperCase();
-            specialItemsList.push({ title: name, isSpecial: true, items: ["MEDIÇÃO ESPECIAL"] });
-            document.getElementById('modal-special').classList.add('hidden');
-            renderComponentCards();
-        }
-
-        function openSpecialServiceModal() { document.getElementById('special-item-name').value = ''; document.getElementById('modal-special').classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    </script>
+    function updateSelectColor(el) {
+        const val = el.value;
+        el.classList.remove('bg-slate-400', 'bg-emerald-500', 'bg-yellow-500', 'bg-red-600', 'text-white');
+        if (val === 'NÃO INFORMADO') el.classList.add('bg-slate-400', 'text-white');
+        else if (val === 'PEÇA OK') el.classList.add('bg-emerald-500', 'text-white');
+        else if (val === 'RECONDICIONAR') el.classList.add('bg-yellow-500', 'text-white');
+        else if (val === 'TROCAR') el.classList.add('bg-red-600', 'text-white');
+    }
+</script>
 </body>
 </html>
