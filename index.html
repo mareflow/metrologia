@@ -119,10 +119,48 @@
         'Travas CCO', 'Travas CT', 'Parafuso CT Flangeado', 'Parafuso CCO Flangeado', 'Cano Retorno Parafusos', 'Adaptador Lubrificação', 'Nipel de Lubrificação', 'Cano Lubrificação com Nipel', 'Atuador Pressão', 'Atuador Vácuo', 'Atuador Vácuo Eletrônico', 'Atuador Eletrônico com Haste', 'Suporte Atuador Eletrônico', 'Calço Atuador', 'Chapa de Proteção Atuador', 'Parafusos Suporte Atuador', 'Parafusos Chapa Proteção', 'Mangueira na CCO', 'Prisioneiro Saída', 'Prisioneiro Pé Mesa CT', 'Prisioneiro CCE', 'Parafuso CCE', 'Prisioneiro CCO', 'Prisioneiro Especial Longo', 'Saída de Escape', 'Flange Saída CT', 'Chapa de Proteção CT', 'Freio Motor', 'Chapa de Proteção Saída', 'Nipel Fixo na CCO', 'Nipel Roscado na CCO', 'Nipel com Parafuso OCO', 'Olhal', 'Parafuso OCO', 'Coletor', 'Cinta CT CCE', 'Cinta CCO', 'Cinta Saída', 'Flange Pé Mesa CT', 'Cano Admissão CCO', 'Cano Admissão Motor', 'Cano de Água', 'Valvula Prioritária', 'Valvula Solenóide', 'Sonda Temp Pressão', 'Sensor PVF', 'Bocal Plástico Biturbo', 'Tampão CT', 'Arruela Plástica Biturbo', 'Bocal Alumínio Biturbo', 'Luva Borracha Biturbo', 'Cano Ligação Alumínio', 'Capa Alumínio Biturbo', 'Peça Alumínio com Mola', 'Juntas', 'Almofada Amianto Saída', 'Mangueira Atuador', 'Conexão T', 'Defletor Admissão com Trava', 'Abraçadeiras', 'Capa Protetiva Alumínio', 'Nipel de Retorno', 'Mangueira de Retorno', 'Suporte CT', 'Anel Cano Retorno', 'Parafuso União Biturbo', 'Valvula Pressão Partida', 'Oring', 'Valvula Sensor Partida', 'Mangueira Bocal Alumínio'
     ];
 
-    const METROLOGY_STRUCTURE = {
-        'CCE': ['VERIFICAÇÃO ROSCAS', 'FACES DE ASSENTAMENTO', 'MEDIDA COLO MANCAL', 'VERIFICAÇÃO ASPECTO COLO', 'LAVAÇÃO CCE - QUEROSENE', 'ÓLEO PROTETIVO'],
-        'EIXO': ['VERIFICAÇÃO PALHETAS', 'CANAL DO ANEL', 'DISTÂNCIA ANEL / FACE COLAR', 'DIAMETROS COLOS', 'DIAMETRO MENOR DO EIXO', 'DIAMETRO MAIOR DO EIXO', 'DIAMETRO EXT. ALOJAMENTO DO ANEL', 'DIAMETRO DO ALOJAMENTO DO ANEL', 'ANÁLISE ROSCA', 'VIBRAÇÃO USINAGEM', 'PALHETAS AMASSADAS'],
-        'REPAROS': ['ANÁLISE VISUAL', 'TROCA DO COMPONENTE', 'DEFINIÇÃO FOLGAS', 'LIMPEZA DE PRATO', 'LIMPEZA DE COLAR', 'LIMPEZA DE FLANGE', 'CONFERÊNCIA ESTOQUE', 'ESTOQUE DE PORCAS', 'ESTOQUE DE VITON', 'ESTOQUE DE ANEL', 'ESTOQUE TRAVA DE MANCAL']
+const METROLOGY_STRUCTURE = {
+        'CCE': [
+            'VERIFICAÇÃO ROSCAS', 
+            'FACES DE ASSENTAMENTO', 
+            'MEDIDA COLO MANCAL', 
+            'VERIFICAÇÃO ASPECTO COLO', 
+            'LAVAÇÃO CCE - QUEROSENE', 
+            'ÓLEO PROTETIVO'
+        ],
+        'EIXO': [
+            'VERIFICAÇÃO DAS PALHETAS',
+            'VERIFICAÇÃO CANAL DO ANEL',
+            'DISTÂNCIA ANEL / FACE COLAR',
+            'DIAMETROS COLOS',
+            'DIAMETRO MENOR DO EIXO',
+            'DIAMETRO MAIOR DO EIXO',
+            'DIAMETRO EXT. ALOJAMENTO DO ANEL',
+            'DIAMETRO DO ALOJAMENTO DO ANEL',
+            'ANÁLISE ROSCA',
+            'ANÁLISE VIBRAÇÃO USINAGEM',
+            'ANÁLISE PALHETAS AMASSADAS'
+        ],
+        'REPAROS': [
+            'ANÁLISE VISUAL',
+            'TROCA DO COMPONENTE',
+            'DEFINIÇÃO FOLGAS P/ USINAGEM',
+            'ANÁLISE LIMPEZA',
+            'CONFERÊNCIA DO ESTOQUE DE REPAROS',
+            'PEDIDO DE COMPRAS',
+            'LEVANTAMENTO ESTOQUE',
+            'LIMPEZA DE PRATO / ESTOQUE',
+            'LIMPEZA DE COLAR/ ESTOQUE',
+            'LIMPEZA DE FLANGE / ESTOQUE',
+            'LIMPEZA DE PROT. TÉRMICO / ESTOQUE',
+            'LIMPEZA DE MANCAL ENCOSTO/ ESTOQUE',
+            'LIMPEZA DE DEFLETOR DE ÓLEO / ESTOQUE',
+            'LIMPEZA DE ESPAÇADOR / ESTOQUE',
+            'ESTOQUE DE PORCAS',
+            'ESTOQUE DE VITON',
+            'ESTOQUE DE ANEL',
+            'ESTOQUE TRAVA DE MANCAL'
+        ]
     };
 
     async function fetchQueue() {
@@ -165,18 +203,18 @@
             </div>`).join('');
     }
 
-    function renderComponents() {
+function renderComponents() {
         const grid = document.getElementById('metrology-grid');
-        // LOGICA DINÂMICA: Pega o array 'components_to_render' do seu JSON e filtra os cards
+        // Renderiza apenas o que o JSON enviar no array components_to_render
         const listToRender = [...(selectedOS.components_to_render || []), ...specialItems];
         
         if (listToRender.length === 0) {
-            grid.innerHTML = '<div class="col-span-full p-10 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente de metrologia.</div>';
+            grid.innerHTML = '<div class="col-span-full p-10 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente.</div>';
             return;
         }
 
         grid.innerHTML = listToRender.map(comp => {
-            const tasks = METROLOGY_STRUCTURE[comp] || ['CONFERÊNCIA GERAL DE METROLOGIA'];
+            const tasks = METROLOGY_STRUCTURE[comp] || ['MEDIÇÃO GERAL DE METROLOGIA'];
             return `
                 <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 p-6 flex flex-col" id="comp-${comp}">
                     <div class="flex justify-between items-center mb-6">
@@ -189,7 +227,7 @@
                                 <input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 rounded border-slate-300 text-turbo-blue focus:ring-turbo-blue">
                                 <div class="flex-1">
                                     <p class="text-[10px] font-black text-slate-500 uppercase leading-tight">${t}</p>
-                                    <input type="text" placeholder="Medida..." class="w-full mt-1 input-measure px-3 py-1.5 rounded-lg text-[11px] font-bold" data-service="${t}">
+                                    <input type="text" placeholder="Digite a Medida..." class="w-full mt-1 input-measure px-3 py-1.5 rounded-lg text-[11px] font-bold" data-service="${t}">
                                 </div>
                             </div>
                         `).join('')}
