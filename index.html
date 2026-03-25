@@ -17,6 +17,7 @@
         ::-webkit-scrollbar-thumb { background: #2563EB; border-radius: 10px; }
         .input-measure { background-color: #f1f5f9; border: 1px solid #e2e8f0; transition: all 0.2s; }
         .input-measure:focus { border-color: #2563EB; outline: none; background-color: #fff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .checklist-container { max-height: 500px; overflow-y: auto; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen overflow-hidden">
@@ -27,7 +28,7 @@
             <img src="https://i.postimg.cc/Jh5Jvrc9/IMG-7901.png" alt="TurboSul Logo" class="h-10">
             <div>
                 <h1 class="text-lg font-bold tracking-tight text-slate-900 uppercase">TurboSul - Controle de Produção</h1>
-                <p class="text-xs text-slate-500 font-medium italic">Metrologia e Qualidade</p>
+                <p class="text-xs text-slate-500 font-medium italic">Metrologia e Qualidade Técnica</p>
             </div>
         </div>
         <div class="flex items-center space-x-6">
@@ -73,19 +74,20 @@
                     <i class="fa-solid fa-microscope absolute right-[-20px] bottom-[-20px] text-white opacity-10 text-9xl"></i>
                 </div>
 
-                <!-- ANEXOS (IGUAL DESMONTAGEM) -->
+                <!-- ANEXOS (LISTA COMPLETA 71 ITENS) -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="p-4 border-b bg-slate-50">
+                    <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
                         <h3 class="text-turbo-blue font-bold text-[11px] uppercase tracking-tight">1. Anexos (Itens Externos do Cliente)</h3>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase">Conferência de Integridade Final</span>
                     </div>
-                    <div id="anexos-container" class="p-6 space-y-1">
+                    <div id="anexos-container" class="checklist-container p-6 space-y-1">
                         <!-- Renderizado via JS -->
                     </div>
                 </div>
 
-                <!-- COMPONENTES DINÂMICOS -->
+                <!-- COMPONENTES DINÂMICOS (CARDS DO BANCO) -->
                 <div id="metrology-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-32">
-                    <!-- Cards aqui -->
+                    <!-- Cards dinâmicos aparecem aqui -->
                 </div>
             </div>
         </main>
@@ -100,7 +102,7 @@
             </div>
             <div class="p-8 space-y-6">
                 <input type="text" id="special-name" placeholder="NOME DO COMPONENTE..." class="w-full bg-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none border-2 border-transparent focus:border-turbo-blue">
-                <button onclick="addSpecialCard()" class="w-full bg-turbo-blue text-white font-black py-4 rounded-2xl uppercase text-xs shadow-lg">Adicionar</button>
+                <button onclick="addSpecialCard()" class="w-full bg-turbo-blue text-white font-black py-4 rounded-2xl uppercase text-xs shadow-lg">Adicionar à OS</button>
             </div>
         </div>
     </div>
@@ -112,12 +114,15 @@
     let selectedOS = null;
     let specialItems = [];
 
-    const ANEXOS_ITEMS = ['Travas CCO', 'Travas CT', 'Parafuso CT Flangeado', 'Atuador Pressão', 'Atuador Vácuo', 'Cinta CT CCE', 'Cinta CCO', 'Juntas', 'Mangueira Atuador', 'Abraçadeiras'];
+    // LISTA COMPLETA - TODOS OS 71 ITENS DO BANCO
+    const FULL_ANEXOS_LIST = [
+        'Travas CCO', 'Travas CT', 'Parafuso CT Flangeado', 'Parafuso CCO Flangeado', 'Cano Retorno Parafusos', 'Adaptador Lubrificação', 'Nipel de Lubrificação', 'Cano Lubrificação com Nipel', 'Atuador Pressão', 'Atuador Vácuo', 'Atuador Vácuo Eletrônico', 'Atuador Eletrônico com Haste', 'Suporte Atuador Eletrônico', 'Calço Atuador', 'Chapa de Proteção Atuador', 'Parafusos Suporte Atuador', 'Parafusos Chapa Proteção', 'Mangueira na CCO', 'Prisioneiro Saída', 'Prisioneiro Pé Mesa CT', 'Prisioneiro CCE', 'Parafuso CCE', 'Prisioneiro CCO', 'Prisioneiro Especial Longo', 'Saída de Escape', 'Flange Saída CT', 'Chapa de Proteção CT', 'Freio Motor', 'Chapa de Proteção Saída', 'Nipel Fixo na CCO', 'Nipel Roscado na CCO', 'Nipel com Parafuso OCO', 'Olhal', 'Parafuso OCO', 'Coletor', 'Cinta CT CCE', 'Cinta CCO', 'Cinta Saída', 'Flange Pé Mesa CT', 'Cano Admissão CCO', 'Cano Admissão Motor', 'Cano de Água', 'Valvula Prioritária', 'Valvula Solenóide', 'Sonda Temp Pressão', 'Sensor PVF', 'Bocal Plástico Biturbo', 'Tampão CT', 'Arruela Plástica Biturbo', 'Bocal Alumínio Biturbo', 'Luva Borracha Biturbo', 'Cano Ligação Alumínio', 'Capa Alumínio Biturbo', 'Peça Alumínio com Mola', 'Juntas', 'Almofada Amianto Saída', 'Mangueira Atuador', 'Conexão T', 'Defletor Admissão com Trava', 'Abraçadeiras', 'Capa Protetiva Alumínio', 'Nipel de Retorno', 'Mangueira de Retorno', 'Suporte CT', 'Anel Cano Retorno', 'Parafuso União Biturbo', 'Valvula Pressão Partida', 'Oring', 'Valvula Sensor Partida', 'Mangueira Bocal Alumínio'
+    ];
 
     const METROLOGY_STRUCTURE = {
-        'CCE': ['VERIFICAÇÃO ROSCAS', 'FACES DE ASSENTAMENTO', 'MEDIDA COLO MANCAL', 'VERIFICAÇÃO ASPECTO COLO'],
-        'EIXO': ['VERIFICAÇÃO PALHETAS', 'CANAL DO ANEL', 'DIAMETRO COLO', 'DIAMETRO MENOR', 'DIAMETRO MAIOR', 'ANÁLISE ROSCA', 'VIBRAÇÃO USINAGEM'],
-        'REPAROS': ['ANÁLISE VISUAL', 'DEFINIÇÃO FOLGAS', 'LIMPEZA DE PRATO', 'LIMPEZA DE COLAR', 'CONFERÊNCIA ESTOQUE']
+        'CCE': ['VERIFICAÇÃO ROSCAS', 'FACES DE ASSENTAMENTO', 'MEDIDA COLO MANCAL', 'VERIFICAÇÃO ASPECTO COLO', 'LAVAÇÃO CCE - QUEROSENE', 'ÓLEO PROTETIVO'],
+        'EIXO': ['VERIFICAÇÃO PALHETAS', 'CANAL DO ANEL', 'DISTÂNCIA ANEL / FACE COLAR', 'DIAMETROS COLOS', 'DIAMETRO MENOR DO EIXO', 'DIAMETRO MAIOR DO EIXO', 'DIAMETRO EXT. ALOJAMENTO DO ANEL', 'DIAMETRO DO ALOJAMENTO DO ANEL', 'ANÁLISE ROSCA', 'VIBRAÇÃO USINAGEM', 'PALHETAS AMASSADAS'],
+        'REPAROS': ['ANÁLISE VISUAL', 'TROCA DO COMPONENTE', 'DEFINIÇÃO FOLGAS', 'LIMPEZA DE PRATO', 'LIMPEZA DE COLAR', 'LIMPEZA DE FLANGE', 'CONFERÊNCIA ESTOQUE', 'ESTOQUE DE PORCAS', 'ESTOQUE DE VITON', 'ESTOQUE DE ANEL', 'ESTOQUE TRAVA DE MANCAL']
     };
 
     async function fetchQueue() {
@@ -148,7 +153,7 @@
     }
 
     function renderAnexos() {
-        document.getElementById('anexos-container').innerHTML = ANEXOS_ITEMS.map(item => `
+        document.getElementById('anexos-container').innerHTML = FULL_ANEXOS_LIST.map(item => `
             <div class="grid grid-cols-12 gap-3 items-center bg-white p-2 border-b border-slate-50 hover:bg-slate-50 transition">
                 <div class="col-span-5 text-[10px] font-bold text-slate-600 uppercase ml-2">${item}</div>
                 <div class="col-span-3">
@@ -156,17 +161,22 @@
                         <option>NÃO INFORMADO</option><option>PEÇA OK</option><option>RECONDICIONAR</option><option>TROCAR</option>
                     </select>
                 </div>
-                <div class="col-span-4"><input type="text" placeholder="Obs..." class="w-full bg-slate-100 text-slate-500 text-[10px] rounded-lg px-3 py-1.5 outline-none border border-transparent focus:ring-1 focus:ring-turbo-blue"></div>
+                <div class="col-span-4"><input type="text" placeholder="Observação Técnica..." class="w-full bg-slate-100 text-slate-500 text-[10px] rounded-lg px-3 py-1.5 outline-none border border-transparent focus:ring-1 focus:ring-turbo-blue"></div>
             </div>`).join('');
     }
 
     function renderComponents() {
         const grid = document.getElementById('metrology-grid');
-        // Pega apenas os componentes que vieram no JSON + os especiais criados na hora
+        // LOGICA DINÂMICA: Pega o array 'components_to_render' do seu JSON e filtra os cards
         const listToRender = [...(selectedOS.components_to_render || []), ...specialItems];
         
+        if (listToRender.length === 0) {
+            grid.innerHTML = '<div class="col-span-full p-10 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente de metrologia.</div>';
+            return;
+        }
+
         grid.innerHTML = listToRender.map(comp => {
-            const tasks = METROLOGY_STRUCTURE[comp] || ['MEDIÇÃO GERAL'];
+            const tasks = METROLOGY_STRUCTURE[comp] || ['CONFERÊNCIA GERAL DE METROLOGIA'];
             return `
                 <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 p-6 flex flex-col" id="comp-${comp}">
                     <div class="flex justify-between items-center mb-6">
@@ -176,7 +186,7 @@
                     <div class="space-y-3 flex-1">
                         ${tasks.map(t => `
                             <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-turbo-blue focus:ring-turbo-blue">
+                                <input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 rounded border-slate-300 text-turbo-blue focus:ring-turbo-blue">
                                 <div class="flex-1">
                                     <p class="text-[10px] font-black text-slate-500 uppercase leading-tight">${t}</p>
                                     <input type="text" placeholder="Medida..." class="w-full mt-1 input-measure px-3 py-1.5 rounded-lg text-[11px] font-bold" data-service="${t}">
@@ -200,7 +210,7 @@
         const measurements = Array.from(card.querySelectorAll('input[data-service]')).map(i => ({
             servico: i.dataset.service,
             valor: i.value,
-            concluido: i.closest('div').querySelector('input[type="checkbox"]').checked
+            concluido: i.closest('div').parentElement.querySelector('input[type="checkbox"]').checked
         }));
 
         btn.disabled = true;
@@ -210,21 +220,43 @@
             const res = await fetch(API_ACTION, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ os_id: selectedOS.os_id, component: comp, target: target, data: measurements })
+                body: JSON.stringify({ 
+                    os_id: selectedOS.os_id, 
+                    component: comp, 
+                    target: target, 
+                    measurements: measurements,
+                    anexos_data: getAnexosData() // Envia também o checklist de anexos preenchido
+                })
             });
             if(res.ok) { card.classList.add('opacity-40', 'grayscale', 'pointer-events-none'); btn.innerText = 'ENVIADO'; }
         } catch(e) { btn.disabled = false; btn.innerText = 'ERRO'; }
     }
 
+    function getAnexosData() {
+        return Array.from(document.querySelectorAll('#anexos-container > div')).map(row => ({
+            item: row.querySelector('.col-span-5').innerText,
+            status: row.querySelector('select').value,
+            obs: row.querySelector('input').value
+        }));
+    }
+
     function openSpecialModal() { document.getElementById('modalSpecial').classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    
     function addSpecialCard() {
         const name = document.getElementById('special-name').value.toUpperCase();
         if(name) { specialItems.push(name); renderComponents(); closeModal('modalSpecial'); }
     }
+
     function updateColor(el) {
         el.className = 'w-full text-white text-[9px] font-black py-2 rounded-lg uppercase text-center outline-none ' + 
         (el.value === 'PEÇA OK' ? 'bg-emerald-500' : el.value === 'RECONDICIONAR' ? 'bg-yellow-500' : el.value === 'TROCAR' ? 'bg-red-600' : 'bg-slate-400');
+    }
+
+    function toggleTask(check) {
+        const input = check.parentElement.querySelector('input[type="text"]');
+        if (check.checked) input.classList.add('border-turbo-blue', 'bg-blue-50/50');
+        else input.classList.remove('border-turbo-blue', 'bg-blue-50/50');
     }
 
     fetchQueue();
