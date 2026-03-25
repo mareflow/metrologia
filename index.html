@@ -62,16 +62,34 @@
             </div>
 
             <div id="main-workspace" class="hidden space-y-6">
-                <!-- TOP INFO -->
-                <div class="bg-turbo-blue rounded-2xl shadow-lg text-white p-6 min-h-[120px] flex items-center justify-between relative overflow-hidden">
-                    <div class="relative z-10 ml-4">
-                        <h2 id="display-os" class="text-3xl font-black mb-1 italic tracking-tighter uppercase">OS-XXXX</h2>
-                        <p id="display-desc" class="text-sm font-medium opacity-90 uppercase tracking-widest italic">CLIENTE | MODELO</p>
+                <!-- TOP INFO & MONITOR -->
+                <div id="workspace-header" class="flex flex-col lg:flex-row justify-between gap-6">
+                    <div class="bg-turbo-blue rounded-3xl shadow-lg text-white p-6 min-h-[160px] flex-1 flex flex-col justify-between relative overflow-hidden">
+                        <div class="relative z-10 ml-4">
+                            <h2 id="display-os" class="text-3xl font-black mb-1 italic tracking-tighter uppercase">OS-XXXX</h2>
+                            <p id="display-desc" class="text-sm font-medium opacity-90 uppercase tracking-widest italic">CLIENTE | MODELO</p>
+                        </div>
+                        <div class="mt-4 flex space-x-3 relative z-10">
+                            <button type="button" onclick="openSpecialModal()" class="bg-white/20 hover:bg-white/30 text-white border border-white/40 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                + Adicionar Serviço Especial
+                            </button>
+                        </div>
+                        <i class="fa-solid fa-microscope absolute right-[-20px] bottom-[-20px] text-white opacity-10 text-9xl"></i>
                     </div>
-                    <button type="button" onclick="openSpecialModal()" class="relative z-10 bg-white/20 hover:bg-white/30 text-white border border-white/40 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                        + Adicionar Medição Especial
-                    </button>
-                    <i class="fa-solid fa-microscope absolute right-[-20px] bottom-[-20px] text-white opacity-10 text-9xl"></i>
+
+                    <!-- MONITOR DE PRODUTIVIDADE -->
+                    <div class="bg-slate-900 text-white rounded-3xl p-6 flex flex-col justify-between border-b-4 border-turbo-blue lg:w-80 shadow-xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-turbo-blue/20 rounded-xl text-turbo-blue"><i class="fa-solid fa-clock text-xl"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Monitor de Produtividade</p>
+                                <p class="text-xs font-black text-white uppercase">Setor em Produção Ativa</p>
+                            </div>
+                        </div>
+                        <button class="mt-4 w-full bg-turbo-blue hover:bg-blue-700 text-white py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition shadow-lg">
+                            Iniciar Limpeza Setor
+                        </button>
+                    </div>
                 </div>
 
                 <!-- ANEXOS (LISTA COMPLETA 71 ITENS) -->
@@ -93,16 +111,41 @@
         </main>
     </div>
 
-    <!-- MODAL ESPECIAL -->
-    <div id="modalSpecial" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border-t-8 border-turbo-blue">
-            <div class="px-8 py-6 border-b flex justify-between items-center">
-                <h3 class="font-black text-slate-800 uppercase text-lg">Nova Medição</h3>
-                <button onclick="closeModal('modalSpecial')" class="text-slate-400 text-2xl">&times;</button>
+    <!-- MODAL SERVIÇO ESPECIAL (VERSÃO FIEL AO PRINT) -->
+    <div id="modalSpecial" class="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                <h3 class="font-black text-slate-800 text-lg uppercase italic tracking-tighter">Adicionar Serviço Especial</h3>
+                <button onclick="closeModal('modalSpecial')" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-8 space-y-6">
-                <input type="text" id="special-name" placeholder="NOME DO COMPONENTE..." class="w-full bg-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none border-2 border-transparent focus:border-turbo-blue">
-                <button onclick="addSpecialCard()" class="w-full bg-turbo-blue text-white font-black py-4 rounded-2xl uppercase text-xs shadow-lg">Adicionar à OS</button>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">NOME DO COMPONENTE / PROCESSO</label>
+                    <input type="text" id="special-item-name" oninput="validateSpecialModal()" placeholder="EX: MEDIÇÃO DE CARCAÇA EXTRA..." class="w-full bg-[#334155] text-white rounded-xl px-5 py-4 text-sm font-bold outline-none border-2 border-transparent focus:border-blue-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-3 ml-1">TIPO DE PEÇA</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label onclick="toggleSpecialRadioStyle('PADRAO')" id="label-padrao" class="flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all border-blue-600 bg-blue-50/50">
+                            <input type="radio" name="special-type" value="PADRAO" checked class="hidden">
+                            <div class="w-6 h-6 rounded-full border-2 border-blue-600 flex items-center justify-center mr-3 bg-white">
+                                <div id="radio-dot-padrao" class="w-3 h-3 bg-blue-600 rounded-full"></div>
+                            </div>
+                            <span class="text-[11px] font-black text-blue-800 uppercase tracking-tighter">Peça Padrão</span>
+                        </label>
+                        <label onclick="toggleSpecialRadioStyle('RETRABALHO')" id="label-retrabalho" class="flex items-center p-4 border-2 border-slate-100 rounded-2xl cursor-pointer transition-all hover:bg-slate-50">
+                            <input type="radio" name="special-type" value="RETRABALHO" class="hidden">
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center mr-3 bg-white">
+                                <div id="radio-dot-retrabalho" class="w-3 h-3 bg-transparent rounded-full"></div>
+                            </div>
+                            <span class="text-[11px] font-black text-red-700/60 uppercase tracking-tighter">Retrabalho</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-6 border-t border-slate-50">
+                    <button onclick="closeModal('modalSpecial')" class="bg-slate-500 text-white font-black px-8 py-3.5 rounded-xl uppercase text-xs tracking-widest hover:bg-slate-600 transition">Cancelar</button>
+                    <button id="btn-add-special" disabled onclick="addSpecialCard()" class="bg-blue-300 text-white font-black px-10 py-3.5 rounded-xl uppercase text-xs tracking-widest transition-all cursor-not-allowed">Adicionar Item</button>
+                </div>
             </div>
         </div>
     </div>
@@ -278,12 +321,103 @@ function renderComponents() {
         }));
     }
 
-    function openSpecialModal() { document.getElementById('modalSpecial').classList.remove('hidden'); }
+function openSpecialModal() { 
+        document.getElementById('special-item-name').value = ''; 
+        validateSpecialModal();
+        document.getElementById('modalSpecial').classList.remove('hidden'); 
+    }
+
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    
+
+    function validateSpecialModal() {
+        const name = document.getElementById('special-item-name').value;
+        const btn = document.getElementById('btn-add-special');
+        if(name.length >= 3) {
+            btn.disabled = false;
+            btn.classList.replace('bg-blue-300', 'bg-blue-600');
+            btn.classList.remove('cursor-not-allowed');
+        } else {
+            btn.disabled = true;
+            btn.classList.replace('bg-blue-600', 'bg-blue-300');
+            btn.classList.add('cursor-not-allowed');
+        }
+    }
+
+    function toggleSpecialRadioStyle(type) {
+        const lp = document.getElementById('label-padrao');
+        const lr = document.getElementById('label-retrabalho');
+        const dotP = document.getElementById('radio-dot-padrao');
+        const dotR = document.getElementById('radio-dot-retrabalho');
+
+        if(type === 'PADRAO') {
+            document.querySelector('input[value="PADRAO"]').checked = true;
+            lp.className = "flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all border-blue-600 bg-blue-50/50";
+            lr.className = "flex items-center p-4 border-2 border-slate-100 rounded-2xl cursor-pointer transition-all hover:bg-slate-50";
+            dotP.classList.replace('bg-transparent', 'bg-blue-600');
+            dotR.classList.replace('bg-blue-600', 'bg-transparent');
+        } else {
+            document.querySelector('input[value="RETRABALHO"]').checked = true;
+            lr.className = "flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all border-red-500 bg-red-50/50";
+            lp.className = "flex items-center p-4 border-2 border-slate-100 rounded-2xl cursor-pointer transition-all hover:bg-slate-50";
+            dotR.classList.replace('bg-transparent', 'bg-blue-600');
+            dotP.classList.replace('bg-blue-600', 'bg-transparent');
+        }
+    }
+
     function addSpecialCard() {
-        const name = document.getElementById('special-name').value.toUpperCase();
-        if(name) { specialItems.push(name); renderComponents(); closeModal('modalSpecial'); }
+        const name = document.getElementById('special-item-name').value.toUpperCase();
+        const type = document.querySelector('input[name="special-type"]:checked').value;
+        
+        // Adiciona um objeto em vez de apenas o nome
+        specialItems.push({ name: name, type: type });
+
+        closeModal('modalSpecial');
+        renderComponents(); 
+    }
+
+    // Ajuste na função renderComponents para lidar com o novo formato de specialItems
+    const originalRenderComponents = renderComponents;
+    renderComponents = function() {
+        const grid = document.getElementById('metrology-grid');
+        // Trata os componentes do DB e os especiais
+        const baseFromDB = (selectedOS.components_to_render || []).map(name => ({ name, isSpecial: false }));
+        const listToRender = [...baseFromDB, ...specialItems.map(item => ({ name: item.name, isSpecial: true, type: item.type }))];
+        
+        if (listToRender.length === 0) {
+            grid.innerHTML = '<div class="col-span-full p-20 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente.</div>';
+            return;
+        }
+
+        grid.innerHTML = listToRender.map(comp => {
+            const tasks = comp.isSpecial ? ['MEDIÇÃO ESPECIAL'] : (METROLOGY_STRUCTURE[comp.name] || ['MEDIÇÃO GERAL DE METROLOGIA']);
+            const badgeColor = comp.isSpecial && comp.type === 'RETRABALHO' ? 'bg-red-500' : 'bg-turbo-blue';
+            const badgeText = comp.isSpecial ? comp.type : 'Metrologia';
+
+            return `
+                <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 p-6 flex flex-col" id="comp-${comp.name}">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">${comp.name}</h4>
+                        <span class="text-[10px] font-black uppercase px-4 py-1.5 ${badgeColor} text-white rounded-full">${badgeText}</span>
+                    </div>
+                    <div class="space-y-3 flex-1">
+                        ${tasks.map(t => `
+                            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 rounded border-slate-300 text-turbo-blue focus:ring-turbo-blue">
+                                <div class="flex-1">
+                                    <p class="text-[10px] font-black text-slate-500 uppercase leading-tight">${t}</p>
+                                    <input type="text" placeholder="Digite a Medida..." class="w-full mt-1 input-measure px-3 py-1.5 rounded-lg text-[11px] font-bold" data-service="${t}">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-6 pt-4 border-t grid grid-cols-2 gap-2">
+                        <button onclick="sendTo(this, '${comp.name}', 'RETIFICA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Retífica</button>
+                        <button onclick="sendTo(this, '${comp.name}', 'SOLDA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Solda</button>
+                        <button onclick="sendTo(this, '${comp.name}', 'BANCADA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Bancada</button>
+                        <button onclick="sendTo(this, '${comp.name}', 'MONTAGEM')" class="col-span-2 py-4 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg mt-1">Pronto p/ Montagem</button>
+                    </div>
+                </div>`;
+        }).join('');
     }
 
     function updateColor(el) {
