@@ -167,63 +167,24 @@
 <!-- Biblioteca Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://zghaqlaqozsskfldgsfe.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnaGFxbGFxb3pzc2tmbGRnc2ZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMDY1MzQsImV4cCI6MjA4NDc4MjUzNH0.aC2DMOUNhS2uK6KGI5Sf2c2vGhrCKHMnRyZhL3WwSus';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = 'https://zghaqlaqozsskfldgsfe.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnaGFxbGFxb3pzc2tmbGRnc2ZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMDY1MzQsImV4cCI6MjA4NDc4MjUzNH0.aC2DMOUNhS2uK6KGI5Sf2c2vGhrCKHMnRyZhL3WwSus';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const API_QUEUE = 'https://webhook.mareflow.com.br/webhook/production/metrology-queue';
+    const API_QUEUE = 'https://webhook.mareflow.com.br/webhook/production/metrology-queue';
     const API_ACTION = 'https://webhook.mareflow.com.br/webhook/production/metrology-action';
     
     let selectedOS = null;
     let specialItems = [];
 
-    // LISTA COMPLETA - TODOS OS 71 ITENS DO BANCO
     const FULL_ANEXOS_LIST = [
         'Travas CCO', 'Travas CT', 'Parafuso CT Flangeado', 'Parafuso CCO Flangeado', 'Cano Retorno Parafusos', 'Adaptador Lubrificação', 'Nipel de Lubrificação', 'Cano Lubrificação com Nipel', 'Atuador Pressão', 'Atuador Vácuo', 'Atuador Vácuo Eletrônico', 'Atuador Eletrônico com Haste', 'Suporte Atuador Eletrônico', 'Calço Atuador', 'Chapa de Proteção Atuador', 'Parafusos Suporte Atuador', 'Parafusos Chapa Proteção', 'Mangueira na CCO', 'Prisioneiro Saída', 'Prisioneiro Pé Mesa CT', 'Prisioneiro CCE', 'Parafuso CCE', 'Prisioneiro CCO', 'Prisioneiro Especial Longo', 'Saída de Escape', 'Flange Saída CT', 'Chapa de Proteção CT', 'Freio Motor', 'Chapa de Proteção Saída', 'Nipel Fixo na CCO', 'Nipel Roscado na CCO', 'Nipel com Parafuso OCO', 'Olhal', 'Parafuso OCO', 'Coletor', 'Cinta CT CCE', 'Cinta CCO', 'Cinta Saída', 'Flange Pé Mesa CT', 'Cano Admissão CCO', 'Cano Admissão Motor', 'Cano de Água', 'Valvula Prioritária', 'Valvula Solenóide', 'Sonda Temp Pressão', 'Sensor PVF', 'Bocal Plástico Biturbo', 'Tampão CT', 'Arruela Plástica Biturbo', 'Bocal Alumínio Biturbo', 'Luva Borracha Biturbo', 'Cano Ligação Alumínio', 'Capa Alumínio Biturbo', 'Peça Alumínio com Mola', 'Juntas', 'Almofada Amianto Saída', 'Mangueira Atuador', 'Conexão T', 'Defletor Admissão com Trava', 'Abraçadeiras', 'Capa Protetiva Alumínio', 'Nipel de Retorno', 'Mangueira de Retorno', 'Suporte CT', 'Anel Cano Retorno', 'Parafuso União Biturbo', 'Valvula Pressão Partida', 'Oring', 'Valvula Sensor Partida', 'Mangueira Bocal Alumínio'
     ];
 
-const METROLOGY_STRUCTURE = {
-        'CCE': [
-            'VERIFICAÇÃO ROSCAS', 
-            'FACES DE ASSENTAMENTO', 
-            'MEDIDA COLO MANCAL', 
-            'VERIFICAÇÃO ASPECTO COLO', 
-            'LAVAÇÃO CCE - QUEROSENE', 
-            'ÓLEO PROTETIVO'
-        ],
-        'EIXO': [
-            'VERIFICAÇÃO DAS PALHETAS',
-            'VERIFICAÇÃO CANAL DO ANEL',
-            'DISTÂNCIA ANEL / FACE COLAR',
-            'DIAMETROS COLOS',
-            'DIAMETRO MENOR DO EIXO',
-            'DIAMETRO MAIOR DO EIXO',
-            'DIAMETRO EXT. ALOJAMENTO DO ANEL',
-            'DIAMETRO DO ALOJAMENTO DO ANEL',
-            'ANÁLISE ROSCA',
-            'ANÁLISE VIBRAÇÃO USINAGEM',
-            'ANÁLISE PALHETAS AMASSADAS'
-        ],
-        'REPAROS': [
-            'ANÁLISE VISUAL',
-            'TROCA DO COMPONENTE',
-            'DEFINIÇÃO FOLGAS P/ USINAGEM',
-            'ANÁLISE LIMPEZA',
-            'CONFERÊNCIA DO ESTOQUE DE REPAROS',
-            'PEDIDO DE COMPRAS',
-            'LEVANTAMENTO ESTOQUE',
-            'LIMPEZA DE PRATO / ESTOQUE',
-            'LIMPEZA DE COLAR/ ESTOQUE',
-            'LIMPEZA DE FLANGE / ESTOQUE',
-            'LIMPEZA DE PROT. TÉRMICO / ESTOQUE',
-            'LIMPEZA DE MANCAL ENCOSTO/ ESTOQUE',
-            'LIMPEZA DE DEFLETOR DE ÓLEO / ESTOQUE',
-            'LIMPEZA DE ESPAÇADOR / ESTOQUE',
-            'ESTOQUE DE PORCAS',
-            'ESTOQUE DE VITON',
-            'ESTOQUE DE ANEL',
-            'ESTOQUE TRAVA DE MANCAL'
-        ]
+    const METROLOGY_STRUCTURE = {
+        'CCE': ['VERIFICAÇÃO ROSCAS', 'FACES DE ASSENTAMENTO', 'MEDIDA COLO MANCAL', 'VERIFICAÇÃO ASPECTO COLO', 'LAVAÇÃO CCE - QUEROSENE', 'ÓLEO PROTETIVO'],
+        'EIXO': ['VERIFICAÇÃO DAS PALHETAS', 'VERIFICAÇÃO CANAL DO ANEL', 'DISTÂNCIA ANEL / FACE COLAR', 'DIAMETROS COLOS', 'DIAMETRO MENOR DO EIXO', 'DIAMETRO MAIOR DO EIXO', 'DIAMETRO EXT. ALOJAMENTO DO ANEL', 'DIAMETRO DO ALOJAMENTO DO ANEL', 'ANÁLISE ROSCA', 'ANÁLISE VIBRAÇÃO USINAGEM', 'ANÁLISE PALHETAS AMASSADAS'],
+        'REPAROS': ['ANÁLISE VISUAL', 'TROCA DO COMPONENTE', 'DEFINIÇÃO FOLGAS P/ USINAGEM', 'ANÁLISE LIMPEZA', 'CONFERÊNCIA DO ESTOQUE', 'PEDIDO DE COMPRAS', 'LEVANTAMENTO ESTOQUE', 'LIMPEZA DE PRATO', 'LIMPEZA DE COLAR', 'LIMPEZA DE FLANGE', 'LIMPEZA DE PROT. TÉRMICO', 'LIMPEZA DE MANCAL ENCOSTO', 'LIMPEZA DE DEFLETOR', 'LIMPEZA DE ESPAÇADOR', 'ESTOQUE DE PORCAS', 'ESTOQUE DE VITON', 'ESTOQUE DE ANEL', 'ESTOQUE TRAVA']
     };
 
     async function fetchQueue() {
@@ -248,7 +209,6 @@ const METROLOGY_STRUCTURE = {
         document.getElementById('main-workspace').classList.remove('hidden');
         document.getElementById('display-os').innerText = os.business_id;
         document.getElementById('display-desc').innerText = `${os.client} | ${os.model}`;
-        
         renderAnexos();
         renderComponents();
     }
@@ -257,93 +217,49 @@ const METROLOGY_STRUCTURE = {
         document.getElementById('anexos-container').innerHTML = FULL_ANEXOS_LIST.map(item => `
             <div class="grid grid-cols-12 gap-3 items-center bg-white p-2 border-b border-slate-50 hover:bg-slate-50 transition">
                 <div class="col-span-5 text-[10px] font-bold text-slate-600 uppercase ml-2">${item}</div>
-                <div class="col-span-3">
-                    <select onchange="updateColor(this)" class="w-full bg-slate-400 text-white text-[9px] font-black py-2 rounded-lg uppercase text-center outline-none">
-                        <option>NÃO INFORMADO</option><option>PEÇA OK</option><option>RECONDICIONAR</option><option>TROCAR</option>
-                    </select>
-                </div>
-                <div class="col-span-4"><input type="text" placeholder="Observação Técnica..." class="w-full bg-slate-100 text-slate-500 text-[10px] rounded-lg px-3 py-1.5 outline-none border border-transparent focus:ring-1 focus:ring-turbo-blue"></div>
+                <div class="col-span-3"><select onchange="updateColor(this)" class="w-full bg-slate-400 text-white text-[9px] font-black py-2 rounded-lg uppercase text-center outline-none"><option>NÃO INFORMADO</option><option>PEÇA OK</option><option>RECONDICIONAR</option><option>TROCAR</option></select></div>
+                <div class="col-span-4"><input type="text" placeholder="Obs..." class="w-full bg-slate-100 text-slate-500 text-[10px] rounded-lg px-3 py-1.5 outline-none border border-transparent focus:ring-1 focus:ring-turbo-blue"></div>
             </div>`).join('');
     }
 
-function renderComponents() {
+    function renderComponents() {
         const grid = document.getElementById('metrology-grid');
-        // Renderiza apenas o que o JSON enviar no array components_to_render
-        const listToRender = [...(selectedOS.components_to_render || []), ...specialItems];
+        const baseFromDB = (selectedOS.components_to_render || []).map(name => ({ name, isSpecial: false }));
+        const listToRender = [...baseFromDB, ...specialItems];
         
         if (listToRender.length === 0) {
-            grid.innerHTML = '<div class="col-span-full p-10 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente.</div>';
+            grid.innerHTML = '<div class="col-span-full p-20 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente.</div>';
             return;
         }
 
         grid.innerHTML = listToRender.map(comp => {
-            const tasks = METROLOGY_STRUCTURE[comp] || ['MEDIÇÃO GERAL DE METROLOGIA'];
+            const tasks = comp.isSpecial ? (comp.items || ['MEDIÇÃO ESPECIAL']) : (METROLOGY_STRUCTURE[comp.name] || ['MEDIÇÃO GERAL']);
+            const badgeColor = comp.isSpecial && comp.type === 'RETRABALHO' ? 'bg-red-500' : 'bg-turbo-blue';
+            const badgeText = comp.isSpecial ? comp.type : 'Metrologia';
+
             return `
-                <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 p-6 flex flex-col" id="comp-${comp}">
-                    <div class="flex justify-between items-center mb-6">
-                        <h4 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">${comp}</h4>
-                        <span class="text-[10px] font-black uppercase px-4 py-1.5 bg-turbo-blue text-white rounded-full">Metrologia</span>
-                    </div>
+                <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 p-6 flex flex-col" id="comp-${comp.name}">
+                    <div class="flex justify-between items-center mb-6"><h4 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">${comp.name}</h4><span class="text-[10px] font-black uppercase px-4 py-1.5 ${badgeColor} text-white rounded-full">${badgeText}</span></div>
                     <div class="space-y-3 flex-1">
                         ${tasks.map(t => `
                             <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
                                 <input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 rounded border-slate-300 text-turbo-blue focus:ring-turbo-blue">
-                                <div class="flex-1">
-                                    <p class="text-[10px] font-black text-slate-500 uppercase leading-tight">${t}</p>
-                                    <input type="text" placeholder="Digite a Medida..." class="w-full mt-1 input-measure px-3 py-1.5 rounded-lg text-[11px] font-bold" data-service="${t}">
-                                </div>
-                            </div>
-                        `).join('')}
+                                <div class="flex-1"><p class="text-[10px] font-black text-slate-500 uppercase leading-tight">${t}</p><input type="text" placeholder="Valor/Obs..." class="w-full mt-1 input-measure px-3 py-1.5 rounded-lg text-[11px] font-bold" data-service="${t}"></div>
+                            </div>`).join('')}
                     </div>
                     <div class="mt-6 pt-4 border-t grid grid-cols-2 gap-2">
-                        <button onclick="sendTo(this, '${comp}', 'RETIFICA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Retífica</button>
-                        <button onclick="sendTo(this, '${comp}', 'SOLDA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Solda</button>
-                        <button onclick="sendTo(this, '${comp}', 'BANCADA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Bancada</button>
-                        <button onclick="sendTo(this, '${comp}', 'MONTAGEM')" class="col-span-2 py-4 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg mt-1">Pronto p/ Montagem</button>
+                        <button onclick="sendTo(this, '${comp.name}', 'RETIFICA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Retífica</button>
+                        <button onclick="sendTo(this, '${comp.name}', 'SOLDA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Solda</button>
+                        <button onclick="sendTo(this, '${comp.name}', 'BANCADA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Bancada</button>
+                        <button onclick="sendTo(this, '${comp.name}', 'MONTAGEM')" class="col-span-2 py-4 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg mt-1">Pronto p/ Montagem</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
-    async function sendTo(btn, comp, target) {
-        const card = document.getElementById(`comp-${comp}`);
-        const measurements = Array.from(card.querySelectorAll('input[data-service]')).map(i => ({
-            servico: i.dataset.service,
-            valor: i.value,
-            concluido: i.closest('div').parentElement.querySelector('input[type="checkbox"]').checked
-        }));
-
-        btn.disabled = true;
-        btn.innerText = 'ENVIANDO...';
-        
-        try {
-            const res = await fetch(API_ACTION, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    os_id: selectedOS.os_id, 
-                    component: comp, 
-                    target: target, 
-                    measurements: measurements,
-                    anexos_data: getAnexosData() // Envia também o checklist de anexos preenchido
-                })
-            });
-            if(res.ok) { card.classList.add('opacity-40', 'grayscale', 'pointer-events-none'); btn.innerText = 'ENVIADO'; }
-        } catch(e) { btn.disabled = false; btn.innerText = 'ERRO'; }
-    }
-
-    function getAnexosData() {
-        return Array.from(document.querySelectorAll('#anexos-container > div')).map(row => ({
-            item: row.querySelector('.col-span-5').innerText,
-            status: row.querySelector('select').value,
-            obs: row.querySelector('input').value
-        }));
-    }
-
-function openSpecialModal() { 
+    // --- LÓGICA DO MODAL ESPECIAL ---
+    function openSpecialModal() { 
         document.getElementById('special-item-name').value = ''; 
-        // Reseta o container para apenas uma linha vazia
         document.getElementById('dynamic-checklist-container').innerHTML = `
             <div class="flex items-center space-x-2">
                 <input type="text" placeholder="Ex: Medida Eixo X" class="special-checklist-input flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-blue-500">
@@ -357,85 +273,62 @@ function openSpecialModal() {
         const container = document.getElementById('dynamic-checklist-container');
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-2';
-        div.innerHTML = `
-            <input type="text" placeholder="Nova medida..." class="special-checklist-input flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-blue-500">
-            <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-circle-minus text-xl"></i></button>
-        `;
+        div.innerHTML = `<input type="text" placeholder="Nova medida..." class="special-checklist-input flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-blue-500"><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-circle-minus text-xl"></i></button>`;
         container.appendChild(div);
+    }
+
+    function validateSpecialModal() {
+        const name = document.getElementById('special-item-name').value;
+        const btn = document.getElementById('btn-add-special');
+        if(name.length >= 3) { btn.disabled = false; btn.classList.replace('bg-blue-300', 'bg-blue-600'); btn.classList.remove('cursor-not-allowed'); }
+        else { btn.disabled = true; btn.classList.replace('bg-blue-600', 'bg-blue-300'); btn.classList.add('cursor-not-allowed'); }
+    }
+
+    function toggleSpecialRadioStyle(type) {
+        const lp = document.getElementById('label-padrao');
+        const lr = document.getElementById('label-retrabalho');
+        if(type === 'PADRAO') {
+            document.querySelector('input[value="PADRAO"]').checked = true;
+            lp.className = "flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all border-blue-600 bg-blue-50/50";
+            lr.className = "flex items-center p-4 border-2 border-slate-100 rounded-2xl cursor-pointer transition-all hover:bg-slate-50";
+        } else {
+            document.querySelector('input[value="RETRABALHO"]').checked = true;
+            lr.className = "flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all border-red-500 bg-red-50/50";
+            lp.className = "flex items-center p-4 border-2 border-slate-100 rounded-2xl cursor-pointer transition-all hover:bg-slate-50";
+        }
     }
 
     function addSpecialCard() {
         const name = document.getElementById('special-item-name').value.toUpperCase();
         const type = document.querySelector('input[name="special-type"]:checked').value;
-        
-        // Coleta os itens do checklist dinâmico
         const inputs = document.querySelectorAll('.special-checklist-input');
-        const customItems = Array.from(inputs)
-            .map(input => input.value.trim())
-            .filter(val => val !== '');
-
-        if (customItems.length === 0) customItems.push("Medição Geral");
-
-        specialItems.push({ name: name, type: type, items: customItems });
-
+        const customItems = Array.from(inputs).map(input => input.value.trim()).filter(val => val !== '');
+        specialItems.push({ name, type, items: customItems, isSpecial: true });
         closeModal('modalSpecial');
         renderComponents(); 
     }
 
-    // Ajuste na função renderComponents para lidar com o novo formato de specialItems
-    const originalRenderComponents = renderComponents;
-    renderComponents = function() {
-        const grid = document.getElementById('metrology-grid');
-        // Trata os componentes do DB e os especiais
-        const baseFromDB = (selectedOS.components_to_render || []).map(name => ({ name, isSpecial: false }));
-        const listToRender = [...baseFromDB, ...specialItems.map(item => ({ name: item.name, isSpecial: true, type: item.type }))];
-        
-        if (listToRender.length === 0) {
-            grid.innerHTML = '<div class="col-span-full p-20 text-center text-slate-400 font-bold uppercase italic">Nenhum componente pendente.</div>';
-            return;
-        }
-
-        grid.innerHTML = listToRender.map(comp => {
-            const tasks = comp.isSpecial ? (comp.items || ['MEDIÇÃO ESPECIAL']) : (METROLOGY_STRUCTURE[comp.name] || ['MEDIÇÃO GERAL DE METROLOGIA']);
-            const badgeColor = comp.isSpecial && comp.type === 'RETRABALHO' ? 'bg-red-500' : 'bg-turbo-blue';
-            const badgeText = comp.isSpecial ? comp.type : 'Metrologia';
-
-            return `
-                <div class="bg-white rounded-3xl shadow-sm border-2 border-slate-100 p-6 flex flex-col" id="comp-${comp.name}">
-                    <div class="flex justify-between items-center mb-6">
-                        <h4 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">${comp.name}</h4>
-                        <span class="text-[10px] font-black uppercase px-4 py-1.5 ${badgeColor} text-white rounded-full">${badgeText}</span>
-                    </div>
-                    <div class="space-y-3 flex-1">
-                        ${tasks.map(t => `
-                            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                <input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 rounded border-slate-300 text-turbo-blue focus:ring-turbo-blue">
-                                <div class="flex-1">
-                                    <p class="text-[10px] font-black text-slate-500 uppercase leading-tight">${t}</p>
-                                    <input type="text" placeholder="Digite a Medida ou Observação..." class="w-full mt-1 input-measure px-3 py-1.5 rounded-lg text-[11px] font-bold" data-service="${t}">
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="mt-6 pt-4 border-t grid grid-cols-2 gap-2">
-                        <button onclick="sendTo(this, '${comp.name}', 'RETIFICA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Retífica</button>
-                        <button onclick="sendTo(this, '${comp.name}', 'SOLDA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Solda</button>
-                        <button onclick="sendTo(this, '${comp.name}', 'BANCADA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Bancada</button>
-                        <button onclick="sendTo(this, '${comp.name}', 'MONTAGEM')" class="col-span-2 py-4 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg mt-1">Pronto p/ Montagem</button>
-                    </div>
-                </div>`;
-        }).join('');
+    // --- HISTÓRICO ---
+    async function carregarLinhaDoTempo() {
+        if (!selectedOS) { alert("Selecione uma OS primeiro."); return; }
+        document.getElementById('detail-business-id').textContent = selectedOS.business_id;
+        document.getElementById('detail-model').textContent = selectedOS.model;
+        document.getElementById('details-modal').classList.remove('hidden');
+        document.getElementById('details-modal').classList.add('flex');
+        const { data: events } = await supabaseClient.from('history_events').select('*').eq('service_order_id', selectedOS.os_id || selectedOS.id).order('timestamp', { ascending: true });
+        const timeline = document.getElementById('timeline-container');
+        if (events) timeline.innerHTML = events.map(ev => `<div class="pb-3 pl-4 border-l-2 border-blue-100"><p class="text-xs font-bold uppercase">${ev.action}</p><p class="text-[9px] text-slate-400">${new Date(ev.timestamp).toLocaleString()}</p></div>`).join('');
     }
 
-    function updateColor(el) {
-        el.className = 'w-full text-white text-[9px] font-black py-2 rounded-lg uppercase text-center outline-none ' + 
-        (el.value === 'PEÇA OK' ? 'bg-emerald-500' : el.value === 'RECONDICIONAR' ? 'bg-yellow-500' : el.value === 'TROCAR' ? 'bg-red-600' : 'bg-slate-400');
-    }
-
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     function toggleTask(check) {
         const input = check.parentElement.querySelector('input[type="text"]');
         if (check.checked) input.classList.add('border-turbo-blue', 'bg-blue-50/50');
         else input.classList.remove('border-turbo-blue', 'bg-blue-50/50');
+    }
+    function updateColor(el) {
+        el.className = 'w-full text-white text-[9px] font-black py-2 rounded-lg uppercase text-center outline-none ' + 
+        (el.value === 'PEÇA OK' ? 'bg-emerald-500' : el.value === 'RECONDICIONAR' ? 'bg-yellow-500' : el.value === 'TROCAR' ? 'bg-red-600' : 'bg-slate-400');
     }
 
     fetchQueue();
