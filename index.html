@@ -305,6 +305,52 @@ const SUPABASE_URL = 'https://zghaqlaqozsskfldgsfe.supabase.co';
             btn.disabled = false; btn.innerText = 'ERRO'; alert("Falha ao enviar."); 
         }
     }
+	
+	}
+
+    async function iniciarServicoPeca(componentName) {
+        if (!selectedOS) return;
+        const osId = selectedOS.service_order_id || selectedOS.os_id || selectedOS.id;
+        try {
+            const response = await fetch('https://webhook.mareflow.com.br/webhook/production/start-component-service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ os_id: osId, component_name: componentName })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (!selectedOS.full_tracking) selectedOS.full_tracking = [];
+                let trk = selectedOS.full_tracking.find(t => (t.component === componentName || t.component_name === componentName));
+                if (trk) { trk.status = 'Em Execução'; trk.rework_start_time = data.rework_start_time; }
+                else { selectedOS.full_tracking.push({ component: componentName, status: 'Em Execução', rework_start_time: data.rework_start_time, current_stage: 'METROLOGIA' }); }
+                renderComponents();
+            }
+        } catch (error) { alert("Erro ao iniciar."); }
+    }
+
+    async function finalizarServicoPeca(componentName) {
+        if (!selectedOS) return;
+        const osId = selectedOS.service_order_id || selectedOS.os_id || selectedOS.id;
+        try {
+            const response = await fetch('https://webhook.mareflow.com.br/webhook/production/finish-component-service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ os_id: osId, component_name: componentName })
+            });
+            const resumo = await response.json();
+            if (response.ok) {
+                let trk = (selectedOS.full_tracking || []).find(t => (t.component === componentName || t.component_name === componentName));
+                if (trk) trk.status = 'Finalizado';
+                document.getElementById('resumo-peca-nome').innerText = componentName;
+                document.getElementById('resumo-inicio').innerText = resumo.start_time;
+                document.getElementById('resumo-fim').innerText = resumo.end_time;
+                document.getElementById('resumo-duracao').innerText = resumo.duration;
+                document.getElementById('modal-resumo-tempo').classList.remove('hidden');
+                document.getElementById('modal-resumo-tempo').classList.add('flex');
+                renderComponents();
+            }
+        } catch (error) { alert("Erro ao finalizar."); }
+    }
 
     function getAnexosData() {
         return Array.from(document.querySelectorAll('#anexos-container > div')).map(row => ({
@@ -439,6 +485,35 @@ const SUPABASE_URL = 'https://zghaqlaqozsskfldgsfe.supabase.co';
             <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 text-center border-t pt-4">Linha do Tempo de Produção</h4>
             <div id="timeline-container" class="space-y-4 border-l-2 border-slate-200 ml-2 pl-4">
                 <!-- Histórico injetado aqui -->
+            </div>
+        </div>
+</div>
+
+    <!-- MODAL RESUMO DE EXECUÇÃO (METROLOGIA) -->
+    <div id="modal-resumo-tempo" class="fixed inset-0 bg-slate-900/80 z-[200] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border-t-8 border-blue-600">
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-stopwatch text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter mb-2">Medição Finalizada!</h3>
+                <p id="resumo-peca-nome" class="text-blue-600 font-bold uppercase text-sm mb-2">NOME DA PEÇA</p>
+                <p class="text-[11px] text-slate-500 font-medium italic mb-6">Agora você pode direcionar a peça para o próximo setor desejado.</p>
+                <div class="grid grid-cols-2 gap-4 mb-8 bg-slate-50 p-4 rounded-2xl">
+                    <div class="text-left">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Início</p>
+                        <p id="resumo-inicio" class="font-bold text-slate-700">--:--</p>
+                    </div>
+                    <div class="text-left border-l pl-4">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Fim</p>
+                        <p id="resumo-fim" class="font-bold text-slate-700">--:--</p>
+                    </div>
+                    <div class="col-span-2 border-t pt-2 mt-2">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Tempo de Medição</p>
+                        <p id="resumo-duracao" class="text-2xl font-black text-blue-600">--</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('modal-resumo-tempo').classList.add('hidden')" class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest hover:bg-black transition shadow-lg">OK, Continuar</button>
             </div>
         </div>
     </div>
