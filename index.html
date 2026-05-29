@@ -265,9 +265,9 @@ const SUPABASE_URL = 'https://zghaqlaqozsskfldgsfe.supabase.co';
                         <button onclick="sendTo(this, '${name}', 'SOLDA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Solda</button>
                         <button onclick="sendTo(this, '${comp.name}', 'BANCADA')" class="py-3 bg-slate-50 text-slate-700 text-[10px] font-black uppercase rounded-lg hover:bg-slate-100 transition">Bancada</button>
                         
-                        ${name === 'Eixo' ? `
-                            <button onclick="sendTo(this, '${name}', 'BALANCEAMENTO')" class="col-span-2 py-3 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase rounded-lg transition shadow-md">Enviar p/ Balanceamento Solo</button>
-                        ` : ''}
+                        ${name.toUpperCase() === 'EIXO' ? `
+                <button onclick="sendTo(this, '${name}', 'BALANCEAMENTO')" class="col-span-2 py-3 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase rounded-lg transition shadow-md">Enviar p/ Balanceamento Solo</button>
+            ` : ''}
 
                         <button onclick="sendTo(this, '${name}', 'MONTAGEM')" class="col-span-2 py-4 bg-emerald-600 text-white text-[11px] font-black uppercase rounded-xl shadow-lg mt-1 transition hover:bg-emerald-700">Pronto p/ Montagem</button>
                     </div>
