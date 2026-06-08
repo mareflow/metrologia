@@ -697,20 +697,28 @@
             // 1. Atualização dos cronômetros das medições de componentes
             if (selectedOS) {
                 document.querySelectorAll('[id^="badge-"]').forEach(badge => {
+                    // O ID gerado no HTML é "badge-NOME_DA_PECA-nome_do_servico"
                     const idParts = badge.id.split('-');
-                    const compTitle = idParts[0]; // CCE, EIXO, etc.
-                    const cleanItemName = idParts[1];
+                    const compTitle = idParts[1]; // CORREÇÃO: O índice 1 é a peça (ex: ROTOR). O 0 é a palavra "badge"
                     
                     const prefix = `timer_${selectedOS.id}_${compTitle}_`;
+                    
                     for (let i = 0; i < localStorage.length; i++) {
                         const key = localStorage.key(i);
                         if (key && key.startsWith(prefix)) {
-                            const startTimeStr = localStorage.getItem(key);
-                            if (startTimeStr) {
-                                const elapsed = Math.floor((new Date() - new Date(startTimeStr)) / 1000);
-                                const min = Math.floor(elapsed / 60);
-                                const sec = elapsed % 60;
-                                badge.innerText = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                            // Validação para garantir que o timer atualize apenas o serviço exato correspondente
+                            const serviceNameFromKey = key.replace(prefix, '');
+                            const cleanServiceFromKey = serviceNameFromKey.replace(/\s+/g, '_').toLowerCase();
+                            const cleanItemName = idParts.slice(2).join('-'); 
+                            
+                            if (cleanServiceFromKey === cleanItemName) {
+                                const startTimeStr = localStorage.getItem(key);
+                                if (startTimeStr) {
+                                    const elapsed = Math.floor((new Date() - new Date(startTimeStr)) / 1000);
+                                    const min = Math.floor(elapsed / 60);
+                                    const sec = elapsed % 60;
+                                    badge.innerText = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                                }
                             }
                         }
                     }
