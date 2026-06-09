@@ -519,7 +519,7 @@
             }
         }
 
-        // PERSISTÊNCIA INTEGRADA DO CHECKLIST DE ANEXOS DA METROLOGIA (N8N)
+        // PERSISTÊNCIA INTEGRADA DO CHECKLIST DE ANEXOS DA METROLOGIA COM AUDITORIA E TRAVA POR SENHA
         async function saveMetrologyChecklist() {
             if (!selectedOS) {
                 alert("Selecione uma Ordem de Serviço na fila antes de salvar.");
@@ -528,37 +528,105 @@
 
             const btn = document.getElementById('btn-salvar-checklist');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Gravando Checklist...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Verificando Divergências...`;
 
             const osId = selectedOS.service_order_id || selectedOS.id;
             const anexosData = getAnexosData();
 
+            const rows = anexosData.map(item => ({
+                service_order_id: osId,
+                item_name: item.item.toUpperCase().trim(),
+                status: item.status,
+                observation: item.obs || ""
+            }));
+
             try {
-                // Envia a requisição assíncrona ao novo webhook do n8n para tratamento de banco e histórico
-                const response = await fetch('https://webhook.mareflow.com.br/webhook/production/metrology-save-checklist', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        os_id: osId,
-                        anexos: anexosData
-                    })
+                // 1. Busca os valores originais da Análise Técnica no Supabase para comparação
+                const { data: baseline, error: baselineError } = await supabaseClient
+                    .from('checklist_analysis_general')
+                    .select('item_name, status')
+                    .eq('service_order_id', osId);
+
+                if (baselineError) throw baselineError;
+
+                // 2. Compara os valores para detectar divergências
+                let hasDivergence = false;
+                const divergentItems = [];
+
+                rows.forEach(item => {
+                    const baseItem = baseline.find(b => b.item_name.toUpperCase().trim() === item.item_name.toUpperCase().trim());
+                    if (baseItem && baseItem.status.toUpperCase().trim() !== item.status.toUpperCase().trim()) {
+                        hasDivergence = true;
+                        divergentItems.push(`${item.item_name} (Análise: ${baseItem.status} | Metrologia: ${item.status})`);
+                    }
                 });
 
-                if (response.ok) {
-                    // 🌟 SUCESSO: Oculta a área de preenchimento e exibe o resumo estático de leitura em tempo real
-                    document.getElementById('checklist-inputs-container').classList.add('hidden');
-                    const summaryContainer = document.getElementById('checklist-summary-container');
-                    summaryContainer.classList.remove('hidden');
-                    
-                    renderChecklistSummary(anexosData);
+                const executeSave = async (isAuthorized = false, supervisorName = "") => {
+                    const response = await fetch('https://webhook.mareflow.com.br/webhook/production/metrology-save-checklist', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            os_id: osId,
+                            anexos: anexosData
+                        })
+                    });
 
-                    alert("Checklist de integridade final salvo com sucesso!");
+                    if (response.ok) {
+                        if (isAuthorized) {
+                            // Grava log detalhado de divergência no histórico geral da OS
+                            const detailsMsg = `Supervisor ${supervisorName} autorizou divergências na Metrologia: ${divergentItems.join(', ')}`;
+                            await supabaseClient
+                                .from('history_events')
+                                .insert({
+                                    service_order_id: osId,
+                                    action: 'Divergência de Checklist Autorizada',
+                                    details: detailsMsg,
+                                    timestamp: new Date().toISOString()
+                                });
+                        }
+
+                        document.getElementById('checklist-inputs-container').classList.add('hidden');
+                        const summaryContainer = document.getElementById('checklist-summary-container');
+                        summaryContainer.classList.remove('hidden');
+                        renderChecklistSummary(anexosData);
+
+                        alert("Checklist de integridade final salvo com sucesso!");
+                    } else {
+                        throw new Error("Erro de rede");
+                    }
+                };
+
+                // 3. Se houver divergência técnica, aciona a trava por senha
+                if (hasDivergence) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-floppy-disk mr-2"></i> 1. Salvar Checklist de Integridade`;
+
+                    // Abre o modal de senha e configura o aviso
+                    const modal = document.getElementById('modal-supervisor');
+                    document.getElementById('modal-supervisor-desc').innerHTML = `<b>Divergências detectadas:</b><br>${divergentItems.join('<br>')}<br><br>Digite a senha do líder para autorizar o salvamento.`;
+                    document.getElementById('input-supervisor-password').value = '';
+                    modal.style.display = 'flex';
+
+                    // Configura o evento do botão de autorização
+                    document.getElementById('btn-confirm-supervisor').onclick = async () => {
+                        const pass = document.getElementById('input-supervisor-password').value.trim();
+                        if (pass === 'TURBOSUL2026') {
+                            closeSupervisorModal();
+                            btn.disabled = true;
+                            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Gravando...`;
+                            await executeSave(true, "Líder Metrologia");
+                        } else {
+                            alert("❌ Senha incorreta! Autorização negada.");
+                        }
+                    };
                 } else {
-                    throw new Error("Erro na rede");
+                    // Sem divergência, salva direto
+                    await executeSave(false);
                 }
+
             } catch (e) {
-                console.error("Erro ao salvar checklist de anexos via n8n:", e);
-                alert("Falha ao salvar checklist. Verifique sua conexão de rede.");
+                console.error(e);
+                alert("Falha de conexão ao salvar checklist.");
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-floppy-disk mr-2"></i> 1. Salvar Checklist de Integridade`;
             }
@@ -792,5 +860,26 @@
             </div>
         </div>
     </div>
+<!-- MODAL: SENHA DO SUPERVISOR PARA LIBERAÇÃO DE DIVERGÊNCIA -->
+    <div id="modal-supervisor" style="display: none;" class="fixed inset-0 bg-slate-900/80 z-[300] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border-t-8 border-red-500">
+            <div class="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-key text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter mb-2">Divergência Detectada!</h3>
+            <p id="modal-supervisor-desc" class="text-[11px] text-slate-500 font-medium italic mb-6">Os vereditos selecionados divergem da Análise Técnica original. Digite a senha do líder para autorizar.</p>
+            <input type="password" id="input-supervisor-password" placeholder="Digite a senha..." class="w-full bg-slate-100 border-2 border-transparent focus:border-red-500 rounded-2xl px-5 py-3 text-sm font-bold text-center outline-none mb-6">
+            <div class="flex space-x-3">
+                <button type="button" onclick="closeSupervisorModal()" class="flex-1 bg-slate-100 text-slate-400 font-black py-4 rounded-2xl uppercase text-xs tracking-widest hover:bg-slate-200">Cancelar</button>
+                <button type="button" id="btn-confirm-supervisor" class="flex-[2] bg-red-600 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg hover:bg-red-700">Autorizar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function closeSupervisorModal() {
+            document.getElementById('modal-supervisor').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
