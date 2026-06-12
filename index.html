@@ -409,6 +409,9 @@
                 concluido: i.closest('div').parentElement.querySelector('input[type="checkbox"]').checked
             }));
 
+            // Filtra as medições realizadas para enviar o tempo das mesmas de forma inteligente ao n8n
+            const executedServices = measurements.filter(m => m.concluido).map(m => m.servico);
+
             btn.disabled = true;
             btn.innerText = 'ENVIANDO...';
             
@@ -421,6 +424,7 @@
                         component: compName, 
                         target: targetSector, 
                         measurements: measurements,
+                        executed_services: executedServices, // <-- Adicionado para o histórico mapear tempos gasto em cada medição
                         anexos_data: getAnexosData() 
                     })
                 });
@@ -793,14 +797,15 @@
 
             try {
                 const { data: events } = await supabaseClient.from('history_events').select('*').eq('service_order_id', selectedOS.os_id || selectedOS.id).order('timestamp', { ascending: true });
-                if (events && events.length > 0) {
+               if (events && events.length > 0) {
                     timeline.innerHTML = events.map(ev => `
                         <div class="relative pb-4 border-l-2 border-turbo-blue pl-4 ml-2">
                             <div class="absolute -left-[9px] top-1 w-4 h-4 bg-turbo-blue rounded-full border-2 border-white shadow-sm"></div>
-                            <p class="text-[11px] font-black text-slate-800 uppercase tracking-tight">${ev.action}</p>
+                            <p class="text-[11px] font-black text-slate-800 uppercase tracking-tight leading-none">${ev.action}</p>
                             <p class="text-[10px] text-slate-400 font-medium mt-1">${new Date(ev.timestamp).toLocaleString('pt-BR')}</p>
+                            ${ev.details ? `<p class="text-[9px] text-turbo-blue italic mt-1 font-semibold leading-relaxed">"${ev.details}"</p>` : ''}
                         </div>`).join('');
-                } else { timeline.innerHTML = '<p class="text-[10px] text-slate-400 italic text-center uppercase py-4">Iniciando histórico...</p>'; }
+                } else {  timeline.innerHTML = '<p class="text-[10px] text-slate-400 italic text-center uppercase py-4">Iniciando histórico...</p>'; }
             } catch (err) { timeline.innerHTML = '<p class="text-xs text-red-500 text-center font-bold">ERRO AO CARREGAR.</p>'; }
         }
 
