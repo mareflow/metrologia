@@ -31,11 +31,10 @@
             </div>
         </div>
         <div class="flex items-center space-x-6">
-            <div class="text-right border-r pr-6 border-slate-200">
-                <p class="text-sm font-bold leading-none">Técnico Metrologista</p>
-                <p class="text-[10px] text-turbo-blue font-black uppercase tracking-wider">Metrologia</p>
+            <div class="text-right pr-4">
+                <p class="text-sm font-black text-slate-800 uppercase tracking-wider leading-none">Metrologia</p>
             </div>
-            <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-bold transition">Sair</button>
+            <button onclick="window.location.href='https://mareflow.github.io/turbosul-login/'" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-bold transition">Sair</button>
         </div>
     </header>
 
@@ -181,6 +180,7 @@
         const API_ACTION = 'https://webhook.mareflow.com.br/webhook/production/metrology-action';
         
         let selectedOS = null;
+        let queueData = []; // Declarado globalmente para suportar o filtro preventivo de peças concluídas
         let specialItems = [];
 
         const FULL_ANEXOS_LIST = [
@@ -197,34 +197,87 @@
             try {
                 const res = await fetch(API_QUEUE);
                 const data = await res.json();
-                const list = document.getElementById('os-list');
-                
-                let queueList = [];
-                if (Array.isArray(data)) queueList = data;
-                else if (data && data.os_id) queueList = [data];
-                else queueList = data.data || [];
+                let rawQueue = [];
+                if (Array.isArray(data)) rawQueue = data;
+                else if (data && data.os_id) rawQueue = [data];
+                else rawQueue = data.data || [];
 
-                list.innerHTML = queueList.map(os => `
-                    <div onclick="selectOS(${JSON.stringify(os).replace(/"/g, '&quot;')})" class="p-5 cursor-pointer bg-white border-l-4 border-transparent hover:bg-slate-50 mb-2 mx-4 mt-2 rounded-xl shadow-sm" id="card-${os.os_id}">
+                // Filtro Inteligente: Remove OSs onde todas as peças já foram enviadas para fora da Metrologia
+                if (rawQueue.length > 0) {
+                    const osIds = rawQueue.map(os => os.service_order_id || os.os_id || os.id);
+                    
+                    const { data: trackings, error } = await supabaseClient
+                        .from('component_tracking')
+                        .select('*')
+                        .in('service_order_id', osIds);
+                        
+                    if (!error && trackings) {
+                        rawQueue = rawQueue.filter(os => {
+                            const osId = os.service_order_id || os.os_id || os.id;
+                            const osTracking = trackings.filter(t => t.service_order_id === osId);
+                            
+                            const componentsToRender = [...new Set(os.components_to_render || [])];
+                            if (componentsToRender.length === 0) return true;
+
+                            // Se ainda houver alguma peça cujo setor atual NÃO seja pós-metrologia, mantém na fila
+                            const hasPendingPiece = componentsToRender.some(compName => {
+                                const p = osTracking.find(t => (t.component_name || t.component || '').toUpperCase() === compName.toUpperCase());
+                                const stage = p ? (p.target_sector || p.current_stage || p.stage || '').toUpperCase().trim() : '';
+                                const postSectors = ['BANCADA', 'MONTAGEM', 'BALANCEAMENTO', 'BALANCEAMENTO FINAL', 'QUALIDADE', 'EXPEDICAO', 'EXPEDIÇÃO'];
+                                return !postSectors.includes(stage);
+                            });
+
+                            // Pré-carrega o tracking para o clique ficar instantâneo
+                            os.full_tracking = osTracking;
+
+                            return hasPendingPiece;
+                        });
+                    }
+                }
+
+                queueData = rawQueue;
+                renderSidebar();
+            } catch (e) {
+                console.error("Erro ao carregar fila da Metrologia:", e);
+            }
+        }
+
+        function renderSidebar() {
+            const list = document.getElementById('os-list');
+            if (queueData.length === 0) {
+                list.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs italic">Fila Vazia.</div>';
+                return;
+            }
+            list.innerHTML = queueData.map(os => {
+                const isSelected = selectedOS?.os_id === os.os_id ? 'os-selected' : '';
+                return `
+                    <div onclick="selectOS('${os.os_id}')" class="p-5 cursor-pointer bg-white border-l-4 border-transparent hover:bg-slate-50 mb-2 mx-4 mt-2 rounded-xl shadow-sm ${isSelected}" id="card-${os.os_id}">
                         <div class="flex justify-between font-black text-sm"><span>${os.business_id}</span><span class="text-[9px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded">${os.urgency}</span></div>
                         <p class="text-xs font-bold text-slate-700 mt-1">${os.model}</p>
                         <p class="text-[10px] text-slate-500 truncate">${os.client}</p>
                     </div>
-                `).join('');
-            } catch (e) {
-                console.error("Erro na fila:", e);
-            }
+                `;
+            }).join('');
         }
 
-        function selectOS(os) {
-            selectedOS = os;
+        function selectOS(id) {
+            selectedOS = queueData.find(o => o.os_id === id);
             specialItems = [];
+            
             document.querySelectorAll('#os-list > div').forEach(c => c.classList.remove('os-selected'));
-            document.getElementById(`card-${os.os_id}`).classList.add('os-selected');
+            const cardEl = document.getElementById(`card-${id}`);
+            if (cardEl) cardEl.classList.add('os-selected');
+            
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('main-workspace').classList.remove('hidden');
-            document.getElementById('display-os').innerText = os.business_id;
-            document.getElementById('display-desc').innerText = `${os.client} | ${os.model}`;
+            document.getElementById('display-os').innerText = selectedOS.business_id;
+            document.getElementById('display-desc').innerText = `${selectedOS.client} | ${selectedOS.model}`;
+            
+            // Garante o desbloqueio do grid ao carregar uma nova OS
+            const metGrid = document.getElementById('metrology-grid');
+            if(metGrid) metGrid.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
+
+            // Os dados de tracking já vêm pré-carregados da fila inicial
             renderAnexos();
             renderComponents();
         }
@@ -611,7 +664,12 @@
                     document.getElementById('btn-confirm-supervisor').onclick = async () => {
                         const pass = document.getElementById('input-supervisor-password').value.trim();
                         if (pass === 'TURBOSUL2026') {
-                            closeSupervisorModal();
+                            closeSupervisorModal(true); // <-- Passa TRUE para evitar bloqueio da tela
+                            
+                            // Garante o desbloqueio do grid de medição
+                            const metGrid = document.getElementById('metrology-grid');
+                            if(metGrid) metGrid.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
+
                             btn.disabled = true;
                             btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Gravando...`;
                             await executeSave(true, "Líder Metrologia");
@@ -877,8 +935,17 @@
     </div>
 
     <script>
-        function closeSupervisorModal() {
+        function closeSupervisorModal(isAuthorized = false) {
             document.getElementById('modal-supervisor').style.display = 'none';
+            
+            // Se o líder NÃO autorizou a divergência da metrologia, bloqueia o grid de medição
+            if (!isAuthorized) {
+                const metGrid = document.getElementById('metrology-grid');
+                if(metGrid) {
+                    metGrid.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
+                }
+                alert("⚠️ Divergência não autorizada. As medições foram bloqueadas.");
+            }
         }
     </script>
 </body>
